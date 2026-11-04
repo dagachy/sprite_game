@@ -1,47 +1,41 @@
 # HANDOFF
 
 ## Goal
-sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스(전문가 에이전트 37명, phase 단위 팀 구성)를 다른 PC에서도 실행하고, 탕탕특공대 분석을 바탕으로 중국 무협 + 이세계 요소의 신작 기획을 제안서 수준까지 다듬는다.
+sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스로 전문가 에이전트 37명을 운영한다. v4 제안서(「새벽 레일」)에 이세계·환생·판타지·던전 요소를 더한 v5 제안서를 만들었다. 리소스(배경·캐릭터·몬스터·아이템)는 모두 Sprite Fusion에서 만든다는 전제다. 기준 문서는 `docs/proposals/game_proposal_v5.md`(「새벽 레일: 환생 열차」, 가제)다.
 
 ## Decisions
-- 커밋과 푸시는 `main`에 직접 한다. 신규 브랜치는 사용자가 요청할 때만 만든다. 현재 원격 브랜치는 `main`만 있다.
-- 원격은 `https://github.com/dagachy/sprite_game.git`이다. HTTPS 푸시는 인증 실패할 수 있으므로 `git@github-dagachy:dagachy/sprite_game.git`로 푸시한다.
-- 토큰 가드는 전역(`~/.claude/token-guard/`, `~/.claude/settings.json`)만 쓴다. 프로젝트 사본은 두지 않는다.
-- `_workspace/*`는 `.gitignore`로 제외한다. 커밋할 문서는 `docs/`에 둔다.
-- 상용 게임 분석은 공개 정보와 플레이 관찰만 쓴다. 역분석, 에셋·수치·UI 재현은 하지 않는다.
-- 구현 에이전트 6명만 Edit·Write·Bash 권한을 가진다. 나머지는 읽기 전용이다.
-- 무협 신작은 뱀서라이크가 아니다. 한 손 경공 이동과 타이밍 판정이 중심이다. 수치와 BM은 전부 가정이다.
-- 무협 신작 BM은 B안(premium + 외형·챕터 DLC)이 추천안이다. 귀환 엔딩의 핵심 인물은 유료로 막지 않는다.
+- v1~v3 제안서는 참조하지 않는다. v5는 v4와 v5 토론 산출물만 근거로 삼는다.
+- 토론 참여는 24명이다(구현 6, 기획·분석 18). 하네스 메타 13명은 빠진다(사용자 정정).
+- 커밋·푸시는 `main`에 직접 하고 다른 브랜치는 만들지 않는다(메모리 `feedback-main-branch-only`). 푸시는 `git@github-dagachy:dagachy/sprite_game.git`로 한다.
+- 장르: v4를 유지한다(세로 지형 전진 서바이버). 이세계는 간판이 아니라 반복 장치(환생 = 판 재시작)다. 던전 1층 = 판 1개 = 구역 A/B/C + 층 보스(약 7분 30초)다. 2층안은 프로토타입 A/B 후보로 둔다.
+- 세계관 A안 「환생 열차」를 채택했다. 승무원 = 직업이다. 출시 직업은 검사·궁수·마법사이고, 성직자는 소프트런칭에 넣는다. 직업 해금은 합류 컷으로만 하고 판매하지 않는다. 원소는 2종이다. 몬스터는 2계열이고 실루엣과 마크로 구분한다. 챕터 2·3에 신규 몬스터와 구역 변이 규칙을 넣는다.
+- 각인 = 환생 포인트(단일 재화)다. 첫 노드 3개는 "전생 기억"이고 1일차에 열린다. 판 안 유물은 판 안에서만 쓴다. 보물방은 판당 재료 최대 6개다.
+- BM: "던전이 주는 것은 팔지 않고, 상품은 속도만 바꾼다." 각성 의상은 정식 출시에 넣는다. "확률 없음" 문구는 쓰지 않는다. 외형 뽑기는 소프트런칭 B군에서만 판다.
+- Sprite Fusion은 부분 충족이다. 생성 → SF 에디터 보정 → Pixel Snapper → 32색 팔레트(외부 Python CLI) 순서다. 앵커 4장과 키아트는 수작업이다. 출시 에셋은 유료 플랜 기간에만 생성한다. 생성 로그는 사이드카 `art_src/meta/`에 둔다. AI 사용은 자발적으로 고지한다.
+- 구현: 인덱스 텍스처 + LUT 셰이더로 하고 W1에 대안 B와 비교한다. Gate는 비트3에 예약한다. 이벤트는 즉시 logEvent로 보낸다. 클라우드 병합은 소프트런칭 시작 전 필수다. 알파는 내부 배포만 한다.
+- 일정은 v4보다 6~8주 늘었다[추정]. 정식 출시 W39~47이다. 소프트런칭은 한국 클로즈 4주 → 일본 9주 순서이고, 미국은 정식 이후다.
 
 ## Done
-- 커밋 `db0966a`: 스토리 텔러 에이전트, 이세계 포함 무협 제안서, 실무 브리핑 6종, `docs/SETUP.md`.
-- 커밋 `6a14f54`: 전역 token-guard 전환, 시장 데이터 분석가 추가, HANDOFF 갱신.
-- 원격 브랜치 `chore/harness-setup`, `docs/tangtang-analysis` 삭제. 둘 다 main에 포함된 내용이었다.
-- 미커밋: `.claude/agents/game-reviewer.md` 추가(베테랑 게임 리뷰어, 읽기 전용). `.claude/phases.json`에 `review` phase 추가(game-reviewer, mechanics-analyst, ux-onboarding-analyst, level-designer). 에이전트 수 36→37 반영(`CLAUDE.md`, `docs/SETUP.md`, 이 파일).
+- `docs/proposals/game_proposal_v5.md`를 작성했다(약 560줄, 미커밋). P4 리뷰 지적 19건을 반영했고 기록은 §18.2에 있다.
+- 토론 산출물은 `_workspace/proposal_v5/`에 있다. brief, p1_research, p2a_design, p2b_bm_ops, p3a_build, p3b_release_qa, p4_review 폴더가 있고, 폴더마다 `_summary.md`가 phase 인계 문서다. `_workspace/`는 gitignore 대상이다.
+- 이전부터 미커밋 상태인 파일: `game_proposal_v4.md`, `isekai_proposal_v3.md`, `wuxia_isekai_proposal_v2.md`, `HANDOFF.md`.
+- 마지막 커밋은 `356f645`다(main).
 
 ## Next
-1. 미커밋 변경 4개 파일과 신규 에이전트 파일을 커밋하고 `main`에 푸시한다(사용자 요청 시).
-2. 다른 PC에서 `docs/SETUP.md`대로 설정하고, `/agents`에서 37개가 보이는지, 전역 token-guard 상태줄이 뜨는지 확인한다.
-3. `market-data-analyst`로 무협 장르 시장 데이터를 조사한다. 제안서 §9 검증 3번이다. 조회 경로(모바일인덱스 또는 센서타워)를 먼저 정한다.
-4. 제안서 §9 검증 1번: 경공 이동과 탭 판정의 입력 지연 프로토타입을 60Hz와 120Hz에서 측정한다.
-5. `game-reviewer`로 무협 제안서를 플레이어 관점에서 검토한다.
-6. 제안서 §10 결정 항목 5개를 사용자와 확정한다.
-7. Unity 프로젝트를 만든다(Unity 6.x, 2D 템플릿). 경로를 받으면 `ProjectSettings/ProjectVersion.txt`로 버전을 확인한다.
-8. spritefusion MCP를 `/mcp`에서 OAuth 인증한다. 호출 전 크레딧 비용을 확인한다.
+1. 사용자가 v5 §17.2의 결정 13개를 확정한다. 특히 팀·착수일, 가제, SF 부분 충족 수용, 크레딧 약 2,300과 유료 플랜, W1 SF 검증 승인.
+2. 사용자가 요청하면 v4·v5와 미커밋 파일을 `main`에 커밋·푸시한다.
+3. W1 검증을 한다. SF 샘플 맵(크레딧 0)과 캐릭터 애니 1종(약 30~45크레딧, 승인 필요, `get_credits` 먼저)으로 zip 경로와 플러그인 경로를 비교한다. 인덱스 셰이더 A/B와 12px 계열 구분 테스트도 한다. 담당은 `level-pipeline-engineer`와 `technical-artist`다.
+4. `economy-balance-analyst`가 경제를 재계산한다. 보물방 6, 보급함, 전생 기억 노드(비용 5×3)를 반영하고 3유형 × 30일 시뮬레이션을 돌린다. 천장 27일과 챕터 12주 사이의 공백도 확인한다.
+5. Unity 6 2D 프로젝트를 만든다. 경로는 사용자에게 받는다.
+6. 출시 전 재확인: Google 결제 확률 공개 조항, 2026-10 게임산업법 개정, 인공지능기본법 가이드라인, SF 약관, Play 신규 계정 클로즈 테스트 요건, 한·일 픽셀 폰트 라이선스.
 
 ## Key files
-- `CLAUDE.md`: 프로젝트 지침. 팀 규칙, 승인 기준, 커밋 규칙.
-- `docs/SETUP.md`: 다른 PC에서 하네스를 실행하는 절차.
-- `docs/proposals/wuxia_action_proposal.md`: 무협 + 이세계 신작 제안서(§5 시나리오, §9 검증, §10 결정 항목).
-- `.claude/phases.json`: phase 후보 풀(review phase 포함)과 동시 활성 상한 5명.
-- `.claude/agents/game-reviewer.md`: 게임 리뷰어(읽기 전용, 미커밋).
-- `.claude/agents/market-data-analyst.md`: 시장 데이터 분석가(읽기 전용).
-- `.claude/agents/storyteller.md`: 스토리 텔러(읽기 전용).
-- `.claude/settings.json`: 프로젝트 세션 시작 훅(Pixel Agents)만 남은 상태.
-- `docs/analysis/commercial/tangtang_analysis.md`: 탕탕특공대 분석 원본.
+- `docs/proposals/game_proposal_v5.md`: 현재 기준 제안서다. §3 세계관·해금, §5~6 메카닉·던전, §8 SF 파이프라인, §11 BM, §15 일정, §17 결정 항목이 있다.
+- `docs/proposals/game_proposal_v4.md`: v5가 "v4 §X 유지"로 참조하는 세부 규칙(감속, 가독성, 맵 규격)이 있다.
+- `_workspace/proposal_v5/*/_summary.md`: phase별 합의와 진행자 판정의 근거다.
+- `.claude/phases.json`, `docs/AGENTS.md`: 팀 구성 규칙과 에이전트 목록이다.
 
 ## Open questions
-- 전역 `~/.claude`의 pre-flight 스킬·에이전트 사본이 프로젝트와 중복될 수 있다. 제거할지 정해야 한다.
-- 탕탕에이스의 과금 구조, 퍼블리셔, 출시일은 미확인이다.
-- 무협 장르의 2026년 시장 데이터는 아직 없다. 조회 경로를 정해야 한다.
-- 원격 URL을 HTTPS에서 SSH로 바꿀지 정해야 한다.
+- v5 §17.2 결정 13개.
+- v1~v3 제안서 파일을 보관할지 정리할지(삭제는 승인이 필요하다).
+- CLAUDE.md의 브랜치 규칙을 main 직접 커밋에 맞게 고칠지.
