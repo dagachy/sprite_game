@@ -14,8 +14,9 @@ sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스(전�
 - 무협 신작 BM은 B안(premium + 외형·챕터 DLC)이 추천안이다. 귀환 엔딩의 핵심 인물은 유료로 막지 않는다.
 
 ## Done
-- 커밋 `db0966a`(main, 푸시 완료): 스토리 텔러 에이전트, 이세계 포함 무협 제안서, 실무 브리핑 6종, `docs/SETUP.md`, `HANDOFF.md`.
-- 이번 작업(커밋 전): 프로젝트 `.claude/token-guard/` 삭제, `.claude/settings.json`에서 token-guard 훅과 statusLine 제거(Pixel Agents SessionStart 훅만 남김), `.gitignore`의 token-guard 항목 제거, `CLAUDE.md`와 `docs/SETUP.md`의 token-guard 설명 갱신.
+- 커밋 `db0966a`(main): 스토리 텔러 에이전트, 이세계 포함 무협 제안서, 실무 브리핑 6종, `docs/SETUP.md`.
+- 커밋 `6a14f54`(main, 푸시 완료): 전역 token-guard 전환, 시장 데이터 분석가 추가, HANDOFF 갱신.
+- 전역 token-guard 전환 내용: 프로젝트 `.claude/token-guard/` 삭제, `.claude/settings.json`에서 token-guard 훅과 statusLine 제거(Pixel Agents SessionStart 훅만 남김), `.gitignore`의 token-guard 항목 제거, `CLAUDE.md`와 `docs/SETUP.md`의 token-guard 설명 갱신.
 - 시장 데이터 분석가 추가: `.claude/agents/market-data-analyst.md`(읽기 전용, 출처와 관측·추정 구분 원칙). analysis phase 후보 풀에 등록. 아직 무협 시장 데이터 조사는 실행하지 않았다.
 - 제안서: `docs/proposals/wuxia_action_proposal.md`. 시나리오 원본은 `_workspace/proposal/storyteller/scenario_isekai.md`(로컬 전용).
 
