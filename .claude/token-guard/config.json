@@ -1,0 +1,12 @@
+{
+  "context_warn_tokens": 200000,
+  "expire_block_tokens": 150000,
+  "expire_idle_seconds": 300,
+  "expire_confirm_seconds": 600,
+  "agent_warn_count": 8,
+  "read_block_bytes": 51200,
+  "handoff_max_bytes": 8192,
+  "big_creation_tokens": 300000,
+  "cache_ttl_seconds": 300,
+  "statusline": true
+}

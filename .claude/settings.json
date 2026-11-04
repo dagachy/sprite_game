@@ -1,0 +1,58 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/hook_stop.py\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/hook_prompt_submit.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/hook_session_start.py\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/hook_pre_agent.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/hook_pre_read.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "TOKEN_GUARD_HOME=\"$CLAUDE_PROJECT_DIR/.claude/token-guard\" python3 \"$CLAUDE_PROJECT_DIR/.claude/token-guard/scripts/statusline.py\""
+  }
+}

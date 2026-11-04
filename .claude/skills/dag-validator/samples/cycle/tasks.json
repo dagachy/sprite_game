@@ -1,0 +1,7 @@
+{
+  "tasks": [
+    {"id": "a", "depends_on": ["c"]},
+    {"id": "b", "depends_on": ["a"]},
+    {"id": "c", "depends_on": ["b"]}
+  ]
+}

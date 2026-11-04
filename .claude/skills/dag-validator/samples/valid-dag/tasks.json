@@ -1,0 +1,9 @@
+{
+  "tasks": [
+    {"id": "fetch",   "depends_on": []},
+    {"id": "parse",   "depends_on": ["fetch"]},
+    {"id": "lint",    "depends_on": ["parse"]},
+    {"id": "test",    "depends_on": ["parse"]},
+    {"id": "report",  "depends_on": ["lint", "test"]}
+  ]
+}
