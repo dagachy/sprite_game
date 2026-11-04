@@ -1,48 +1,43 @@
 # HANDOFF
 
 ## Goal
-sprite_game을 Unity(C#) 2D 모바일 게임 제작 작업 공간으로 세팅한다. 하네스(에이전트 34명, phase 단위 팀 구성)를 정리하고, 상용 게임 분석을 개발 실무 참고용으로 쌓는다. 작업 중에는 Pixel Agents 브라우저 화면으로 팀과 진행을 본다.
+sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스(전문가 에이전트 35명, phase 단위 팀 구성)를 다른 PC에서도 그대로 실행하고, 탕탕특공대 분석을 바탕으로 중국 무협 + 이세계 요소의 신작 기획을 제안서 수준까지 다듬는다.
 
 ## Decisions
-- **신규 브랜치는 사용자가 요청하기 전까지 만들지 않는다.** 커밋과 푸시는 `main`에 직접 한다. 이 규칙은 `CLAUDE.md`의 "기본 브랜치에서 먼저 브랜치를 만든다"보다 우선한다.
-- 원격은 `git@github-dagachy:dagachy/sprite_game.git`(회사 키 별칭)을 쓴다. 일반 `git push`가 `Permission denied`로 실패할 수 있으니 실패 시 `GIT_SSH_COMMAND="ssh"`로 재시도한다.
-- `_workspace/*`는 `.gitignore`로 전부 제외된다. 커밋해야 하는 문서는 `_workspace/`가 아닌 추적 경로(예: `docs/`)에 둔다.
+- 커밋과 푸시는 `main`에 직접 한다. 신규 브랜치는 사용자가 요청할 때만 만든다. CLAUDE.md의 "기본 브랜치에서 먼저 브랜치 생성"보다 이 결정이 우선한다.
+- 원격은 `git@github-dagachy:dagachy/sprite_game.git`이다. 실패하면 `GIT_SSH_COMMAND="ssh"`로 재시도한다. 현재 일반 push가 성공한다.
+- `_workspace/*`는 `.gitignore`로 제외한다. 커밋할 문서는 `docs/`에 둔다.
 - 상용 게임 분석은 공개 정보와 플레이 관찰만 쓴다. 역분석, 에셋·수치·UI 재현은 하지 않는다.
-- 상용 게임 조사·분석은 `commercial-game-analyst` 에이전트에 맡긴다. 메인이 직접 조사하지 않는다. 이 에이전트는 읽기 전용이라 파일을 쓰지 못하므로, 결과 저장은 메인이 맡는다.
-- 팀은 작업마다 새로 구성한다. phase별 동시 활성 5명 이하(`.claude/phases.json`). phase 산출물은 `_workspace/<phase>/<agent>/`에 쓴다.
-- 구현 에이전트 6명만 Edit·Write·Bash를 가진다. 나머지는 읽기 전용이다.
-- Pixel Agents는 고정 포트 3100, `--no-terminal`, 토큰 없는 관찰 URL로만 연다.
+- 구현 에이전트 6명만 Edit·Write·Bash 권한을 가진다. 나머지는 읽기 전용이다.
+- 무협 신작은 뱀서라이크가 아니다. 한 손 경공 이동과 타이밍 판정을 중심으로 한다. 수치와 BM은 전부 가정이다.
+- 무협 신작 BM은 B안(premium + 외형·챕터 DLC)을 추천안으로 둔다. 귀환 엔딩의 핵심 인물은 유료로 막지 않는다.
 
 ## Done
-- `main` 커밋: `6f4a9a7`(하네스 세팅), `aa82873`(Pixel Agents 훅, 스킬 references 분리), `007a61a`(HANDOFF 갱신), `585c50e`(token-guard state를 `.gitignore`에 추가), `b545aea`(상용 게임 분석 문서). `origin/main`과 `b545aea`가 같다.
-- 분석 문서: `docs/analysis/commercial/tangtang_analysis.md`(탕탕특공대 / 탕탕에이스, 원리 10개 우선순위 포함). 원본 작성본은 `_workspace/analysis/commercial/tangtang_analysis.md`에 있다.
-- Pixel Agents 점검: 서버(PID 4208, 포트 3100)는 실행 중이고 HTTP 200을 반환한다. 훅 스크립트는 실행 권한이 있고 수동 실행 시 브라우저를 연다. 로그에 에이전트 활동도 기록된다.
-- pre-flight 점검 통과: 뼈대, agent frontmatter 34개, 팀 규모, 메뉴판.
-- `handoff`, `token-report`, `harness-evolve`의 긴 본문을 `references/`로 옮겼다.
+- 커밋 `fdac7e9`(main, 푸시 완료): 스토리 텔러 에이전트(`.claude/agents/storyteller.md`)와 design phase 등록, 이세계 포함 무협 제안서, 실무 브리핑 6종, `docs/SETUP.md`, 추적 중이던 token-guard 세션 상태 파일 추적 해제.
+- 이세계 시나리오 재작업은 `_workspace/proposal/storyteller/scenario_isekai.md`에 있다(gitignore 대상). 같은 내용이 제안서 §5에 반영됐다.
+- 다른 PC 이식 점검: 프로젝트 설정과 훅에 사용자별 절대 경로가 없다. `pixel-office-open.sh`는 pixel-agents가 없으면 안내만 하고 넘어간다.
 
 ## Next
-1. 브라우저에서 `http://127.0.0.1:3100/`을 열어 에이전트 캐릭터가 보이는지 확인한다. 캐릭터 표시는 Settings → Instant Detection (Hooks) 설치 후 완전히 동작한다. 이 설치는 전역 `~/.claude/settings.json`을 바꾸므로 사용자 승인이 필요하다.
-2. SessionStart 훅 매처가 `startup`만 잡아 `/clear` 후에는 브라우저가 자동으로 열리지 않는다. `startup|clear`로 바꿀지 사용자 승인을 받는다.
-3. 원격 `chore/harness-setup` 브랜치(`aa82873`)를 삭제할지 확인한다. `main`과 내용이 같다.
-4. 원격·로컬 `docs/tangtang-analysis` 브랜치(`b780a8e`)를 삭제할지 확인한다. 요청 없이 만든 브랜치이므로 정리 대상이다.
+1. 이 HANDOFF.md를 커밋하고 `main`에 푸시한다(사용자 요청).
+2. 다른 PC에서 `docs/SETUP.md`대로 설정하고 `/agents`에 35개가 보이는지 확인한다.
+3. 제안서 §9 검증 1번: 경공 이동과 탭 판정의 입력 지연 프로토타입을 60Hz와 120Hz에서 측정한다.
+4. 제안서 §10 결정 항목 5개를 사용자와 확정한다.
 5. Unity 프로젝트를 만든다(Unity 6.x, 2D 템플릿). 경로를 받으면 `ProjectSettings/ProjectVersion.txt`로 버전을 확인한다.
-6. `brew install uv` 후 CoplayDev MCP for Unity를 추가하고 `claude mcp list`로 확인한다.
-7. spritefusion MCP를 `/mcp`에서 OAuth 인증한다. 호출마다 크레딧이 드니 비용을 먼저 확인한다.
+6. spritefusion MCP를 `/mcp`에서 OAuth 인증한다. 호출 전 크레딧 비용을 확인한다.
 
 ## Key files
 - `CLAUDE.md`: 프로젝트 지침. 팀 규칙, 승인 기준, 커밋 규칙.
-- `docs/analysis/commercial/tangtang_analysis.md`: 두 게임 분석 결과(추적 대상).
-- `_workspace/README.md`: phase 산출물 규칙.
-- `.claude/phases.json`: phase 카탈로그. 팀을 짤 때 이 목록에서 고른다.
-- `.claude/hooks/pixel-office-open.sh`: 세션 시작 시 Pixel Agents 서버를 띄우고 브라우저를 여는 훅.
-- `.claude/settings.json`: token-guard 훅과 pixel-office 훅 설정.
-- `.claude/agents/commercial-game-analyst.md`: 상용 게임 분석 에이전트(읽기 전용).
-- `.claude/skills/harness/SKILL.md`: 메뉴판. `references/`는 필요할 때만 읽는다.
-- `.mcp.json`: spritefusion MCP 등록.
+- `docs/SETUP.md`: 다른 PC에서 하네스를 실행하는 절차.
+- `docs/proposals/wuxia_action_proposal.md`: 무협 + 이세계 신작 제안서(§5 시나리오, §10 결정 항목).
+- `_workspace/proposal/storyteller/scenario_isekai.md`: 스토리 텔러 재작업 원본(로컬 전용).
+- `.claude/phases.json`: phase 후보 풀과 동시 활성 상한 5명.
+- `.claude/agents/storyteller.md`: 새 스토리 텔러 에이전트(읽기 전용).
+- `docs/analysis/commercial/tangtang_analysis.md`: 탕탕특공대 분석 원본.
+- `.claude/settings.json`: token-guard 훅, 세션 시작 훅, statusLine.
 
 ## Open questions
-- 전역 `~/.claude`에 pre-flight 스킬·에이전트 9개씩과 token-guard 훅이 같은 이름으로 있다. 지울지 정한다. 지우지 않으면 이 프로젝트에서 훅이 두 번 실행될 수 있다.
-- Unity 프로젝트 경로와 버전.
-- Sprite Fusion 신규 크레딧 지급 여부는 가입 시 확인이 필요하다.
-- 탕탕에이스의 과금 구조, 퍼블리셔, 정확한 출시일은 미확인이다. 스토어 페이지 확인이 필요하다.
-- `chore/harness-setup`, `docs/tangtang-analysis` 원격 브랜치 삭제 여부.
+- 전역 `~/.claude`에 있는 token-guard와 pre-flight 스킬·에이전트가 프로젝트와 중복된다. 제거할지 정해야 한다.
+- `tgctl.py` 도움말은 전역 `~/.claude/token-guard/config.json`을 가리키는데, 프로젝트 설정은 `.claude/token-guard/config.json`에 있다. 불일치 정리가 필요하다.
+- 브랜치 `chore/harness-setup`(aa82873)과 `docs/tangtang-analysis`(b780a8e)는 원격과 로컬에 남아 있다. 삭제 여부를 정한다.
+- 무협 장르의 2026년 시장 데이터는 아직 없다. 확보 경로(모바일인덱스 또는 센서타워)를 정해야 한다.
+- 탕탕에이스의 과금 구조, 퍼블리셔, 출시일은 미확인이다.
