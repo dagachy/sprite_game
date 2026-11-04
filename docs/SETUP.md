@@ -28,7 +28,7 @@ cd sprite_game
 커밋되어 있으므로 따로 설치할 필요가 없다.
 
 - `CLAUDE.md`: 프로젝트 지침(팀 규칙, 승인 기준, 커밋 규칙)
-- `.claude/agents/`: 전문가 에이전트 36명
+- `.claude/agents/`: 전문가 에이전트 37명
 - `.claude/skills/`: 하네스 스킬(`harness`, `handoff`, `token-report` 등)
 - `.claude/phases.json`: phase별 후보 풀과 동시 활성 상한(5명)
 - `.claude/settings.json`: 세션 시작 훅(Pixel Agents)
@@ -53,7 +53,7 @@ cd sprite_game
 새 PC에서 아래를 확인한다.
 
 - `claude` 실행 시 SessionStart 훅 오류가 없다.
-- `/agents`에서 프로젝트 에이전트가 보인다. `.claude/agents`의 파일 수는 36개다.
+- `/agents`에서 프로젝트 에이전트가 보인다. `.claude/agents`의 파일 수는 37개다.
 - `/mcp`에서 spritefusion 상태가 연결됨으로 보인다.
 - 전역 token-guard가 동작한다. 상태줄에 토큰 정보가 보인다.
 - 훅이 Pixel Agents를 띄우지 못하면 `.claude/hooks/pixel-office-open.sh`를 직접 실행해 메시지를 본다.

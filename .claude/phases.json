@@ -36,6 +36,12 @@
     "produce": [
       "mobile-producer"
     ],
+    "review": [
+      "game-reviewer",
+      "mechanics-analyst",
+      "ux-onboarding-analyst",
+      "level-designer"
+    ],
     "harness_audit_structure": [
       "harness-structure-auditor",
       "agent-frontmatter-auditor",
