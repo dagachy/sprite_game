@@ -5,10 +5,10 @@
 ## 구성
 
 - `.mcp.json` — 프로젝트 MCP 서버. `spritefusion`(HTTP)이 등록돼 있다. Unity MCP는 Unity 프로젝트 준비 후 추가한다.
-- `.claude/agents/` — 전문가 에이전트 34명. 분석·기획·QA·출시 계열은 읽기 전용이다. 구현 에이전트 6명만 Edit·Write·Bash를 가진다.
+- `.claude/agents/` — 전문가 에이전트 36명. 분석·기획·QA·출시 계열은 읽기 전용이다. 구현 에이전트 6명만 Edit·Write·Bash를 가진다.
 - `.claude/skills/` — 하네스 스킬. `harness`는 메뉴판(라우터)이고 상세는 `references/`에 있다.
 - `.claude/phases.json` — 팀 phase 카탈로그. 작업마다 phase 단위로 팀을 짠다.
-- `.claude/token-guard/` — 토큰 가드. 임계치는 `config.json`에 있다. 훅 4종과 statusLine은 `.claude/settings.json`에 연결돼 있다.
+- 토큰 가드는 전역 설정(`~/.claude/token-guard/`, `~/.claude/settings.json`)을 쓴다. 프로젝트에는 두지 않는다.
 - `_workspace/` — phase 간 산출물 전달 공간. 규칙은 `_workspace/README.md`에 있다.
 - `HANDOFF.md` — 작업 단위 종료 시 남기는 인수인계 문서. 추적한다.
 
