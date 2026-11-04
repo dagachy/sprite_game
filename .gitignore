@@ -5,3 +5,6 @@ __pycache__/
 # 작업 중간 산출물 (README 제외)
 _workspace/*
 !_workspace/README.md
+
+# token-guard 세션 상태 (런타임 생성물)
+.claude/token-guard/state/
