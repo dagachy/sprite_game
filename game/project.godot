@@ -1,0 +1,38 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Dawn Rail Prototype"
+config/description="새벽 레일: 환생 열차 (가제) — 프로토타입 1차"
+config/version="0.1.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=216
+window/size/viewport_height=384
+window/size/window_width_override=432
+window/size/window_height_override=768
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+
+[autoload]
+
+GameClock="*res://scripts/core/game_clock.gd"
+RunState="*res://scripts/core/run_state.gd"
+Palette="*res://scripts/core/palette.gd"
+Log="*res://scripts/core/log.gd"

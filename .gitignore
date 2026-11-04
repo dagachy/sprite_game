@@ -6,3 +6,8 @@ __pycache__/
 _workspace/*
 !_workspace/README.md
 
+
+# Godot 캐시·내보내기 비밀값
+game/.godot/
+*.keystore
+export_credentials.cfg

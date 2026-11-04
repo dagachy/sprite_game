@@ -10,8 +10,7 @@
 | Git, SSH 키 | 원격 push | `git --version` |
 | Python 3 | 전역 token-guard 훅과 statusLine | `python3 --version` (3.10 이상 권장) |
 | Node.js, npm | Pixel Agents 설치(선택) | `npm --version` |
-| Unity Hub, Unity 6.x | 프로젝트 생성 후 필요 | 나중에 설치 |
-| uv | Unity MCP 서버 실행(나중에 설치) | `uv --version` |
+| Godot 4.x | 게임 프로젝트(`game/`) 실행·빌드 | `brew install --cask godot` 후 `godot --version` |
 
 ## 2. 저장소 받기
 

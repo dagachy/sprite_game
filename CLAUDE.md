@@ -1,10 +1,10 @@
 # sprite_game — 프로젝트 지침
 
-2D 모바일 게임 제작 작업 공간이다. 엔진은 Unity(C#)이며, 레벨 타일맵은 Sprite Fusion으로 만든다.
+2D 모바일 게임 제작 작업 공간이다. 엔진은 Godot 4(GDScript)이며(2026-11-05 Unity에서 전환), 레벨 타일맵은 Sprite Fusion으로 만든다.
 
 ## 구성
 
-- `.mcp.json` — 프로젝트 MCP 서버. `spritefusion`(HTTP)이 등록돼 있다. Unity MCP는 Unity 프로젝트 준비 후 추가한다.
+- `.mcp.json` — 프로젝트 MCP 서버. `spritefusion`(HTTP)이 등록돼 있다. Godot 프로젝트는 `game/`에 있다.
 - `.claude/agents/` — 전문가 에이전트 37명. 분석·기획·QA·출시 계열은 읽기 전용이다. 구현 에이전트 6명만 Edit·Write·Bash를 가진다.
 - `.claude/skills/` — 하네스 스킬. `harness`는 메뉴판(라우터)이고 상세는 `references/`에 있다.
 - `.claude/phases.json` — 팀 phase 카탈로그. 작업마다 phase 단위로 팀을 짠다.
@@ -21,11 +21,11 @@
 
 ## 작업 원칙
 
-- 엔진은 Unity 2D다. 2D가 아닌 기능이나 3D 전제 설계는 하지 않는다.
+- 엔진은 Godot 4 2D다. 2D가 아닌 기능이나 3D 전제 설계는 하지 않는다.
 - 상용 게임 분석은 공개 정보와 플레이 관찰만 쓴다. 역분석이나 복제는 하지 않는다.
 - 아래 작업은 구현 전에 사용자 승인을 받는다.
   - 파일 삭제
-  - 대량 에셋·프리팹 수정, `.meta` 파일 편집
+  - 대량 에셋·씬 수정, `.import` 파일·리소스 UID 편집
   - 스토어 업로드
   - 비밀 값(키, 토큰, 계정 정보) 취급
 - Sprite Fusion 출력 임포터는 실제 샘플 맵 없이 만들지 않는다(`level-pipeline-engineer` 기준).
@@ -41,4 +41,4 @@
 ## 커밋
 
 - 사용자가 요청할 때만 커밋하고 푸시한다. 기본 브랜치에서는 먼저 브랜치를 만든다.
-- `.gitignore`는 `__pycache__/`, `*.pyc`, `.DS_Store`, `_workspace/` 산출물(README 제외)을 제외한다.
+- `.gitignore`는 `__pycache__/`, `*.pyc`, `.DS_Store`, `_workspace/` 산출물(README 제외), `game/.godot/`을 제외한다.
