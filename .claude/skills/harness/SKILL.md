@@ -7,6 +7,8 @@ description: "프로젝트에 맞는 하네스를 설계하고, 전문 에이전
 
 ## 단계 (필요한 단계 파일만 읽는다)
 
+**왜:** 단계 파일을 한꺼번에 읽으면 지금 쓰지 않을 단계까지 토큰을 쓰게 되므로, 해당 단계 링크만 골라 읽는다.
+
 - 0단계 현재 상태 점검: 기존 `.claude/` 구성을 먼저 확인할 때 [0단계 상세](references/stage-0-current-state.md)
 - 1단계 분야와 작업 분석: 새로 구축하거나 작업 종류와 흐름을 나눌 때 [1단계 상세](references/stage-1-analysis.md)
 - 2단계 실행 모드와 팀 구조: 실행 모드와 팀 구성을 정할 때 [2단계 상세](references/stage-2-team-design.md), [실행 모드 상세](references/execution-modes.md), [팀 구성 패턴](references/team-patterns.md)
