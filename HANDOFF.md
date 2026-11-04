@@ -1,41 +1,42 @@
 # HANDOFF
 
 ## Goal
-sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스로 전문가 에이전트 37명을 운영한다. v4 제안서(「새벽 레일」)에 이세계·환생·판타지·던전 요소를 더한 v5 제안서를 만들었다. 리소스(배경·캐릭터·몬스터·아이템)는 모두 Sprite Fusion에서 만든다는 전제다. 기준 문서는 `docs/proposals/game_proposal_v5.md`(「새벽 레일: 환생 열차」, 가제)다.
+sprite_game은 Unity(C#) 2D 모바일 게임 작업 공간이다. 하네스로 전문가 에이전트 37명을 운영한다. 기준 문서는 `docs/proposals/game_proposal_v5.md`(「새벽 레일: 환생 열차」, 가제)다. 이번 세션에서는 v5 기준으로 예상 모바일 화면 목업 이미지를 만들었다. 직전에 요청받은 "기획팀 18명 phase별 상세 기획 문서" 작업은 사용자가 중단시켜서 아직 시작하지 않았다.
 
 ## Decisions
 - v1~v3 제안서는 참조하지 않는다. v5는 v4와 v5 토론 산출물만 근거로 삼는다.
-- 토론 참여는 24명이다(구현 6, 기획·분석 18). 하네스 메타 13명은 빠진다(사용자 정정).
-- 커밋·푸시는 `main`에 직접 하고 다른 브랜치는 만들지 않는다(메모리 `feedback-main-branch-only`). 푸시는 `git@github-dagachy:dagachy/sprite_game.git`로 한다.
-- 장르: v4를 유지한다(세로 지형 전진 서바이버). 이세계는 간판이 아니라 반복 장치(환생 = 판 재시작)다. 던전 1층 = 판 1개 = 구역 A/B/C + 층 보스(약 7분 30초)다. 2층안은 프로토타입 A/B 후보로 둔다.
-- 세계관 A안 「환생 열차」를 채택했다. 승무원 = 직업이다. 출시 직업은 검사·궁수·마법사이고, 성직자는 소프트런칭에 넣는다. 직업 해금은 합류 컷으로만 하고 판매하지 않는다. 원소는 2종이다. 몬스터는 2계열이고 실루엣과 마크로 구분한다. 챕터 2·3에 신규 몬스터와 구역 변이 규칙을 넣는다.
-- 각인 = 환생 포인트(단일 재화)다. 첫 노드 3개는 "전생 기억"이고 1일차에 열린다. 판 안 유물은 판 안에서만 쓴다. 보물방은 판당 재료 최대 6개다.
-- BM: "던전이 주는 것은 팔지 않고, 상품은 속도만 바꾼다." 각성 의상은 정식 출시에 넣는다. "확률 없음" 문구는 쓰지 않는다. 외형 뽑기는 소프트런칭 B군에서만 판다.
-- Sprite Fusion은 부분 충족이다. 생성 → SF 에디터 보정 → Pixel Snapper → 32색 팔레트(외부 Python CLI) 순서다. 앵커 4장과 키아트는 수작업이다. 출시 에셋은 유료 플랜 기간에만 생성한다. 생성 로그는 사이드카 `art_src/meta/`에 둔다. AI 사용은 자발적으로 고지한다.
-- 구현: 인덱스 텍스처 + LUT 셰이더로 하고 W1에 대안 B와 비교한다. Gate는 비트3에 예약한다. 이벤트는 즉시 logEvent로 보낸다. 클라우드 병합은 소프트런칭 시작 전 필수다. 알파는 내부 배포만 한다.
-- 일정은 v4보다 6~8주 늘었다[추정]. 정식 출시 W39~47이다. 소프트런칭은 한국 클로즈 4주 → 일본 9주 순서이고, 미국은 정식 이후다.
+- 커밋·푸시는 `main`에 직접 하고 다른 브랜치는 만들지 않는다(메모리 `feedback-main-branch-only`).
+- 장르는 세로 지형 전진 서바이버다. 던전 1층 = 판 1개 = 구역 A/B/C + 층 보스(약 7분 30초)다. 세계관은 「환생 열차」, 직업은 검사·궁수·마법사(+성직자), 원소 2종, 몬스터 2계열(실루엣 + 머리 위 1px 마크)이다. 상세는 v5 본문을 따른다.
+- 목업 이미지는 Sprite Fusion을 직접 쓰지 않고(크레딧·MCP 미연결), **SF 공개 갤러리(`/pixel-art-gallery`) 스타일만 참고해** Python(PIL)으로 새로 그린다. 갤러리 이미지는 복사하거나 쓰지 않는다(사용자 정정).
+- SF 갤러리 스타일 요약: 32~64px, 1px 어두운 외곽선, 3~4단 색조 이동 음영, 2.5등신 정면 치비, 발광 눈, 디테일 많은 석재·목재.
+- 기획 문서 작업은 기획·분석 18명이 읽기 전용이라 파일을 못 쓴다. 메인이 결과를 받아 `_workspace/<task>/<phase>/<agent>.md`로 저장하고 phase마다 `_summary.md`를 만드는 방식(proposal_v5와 같은 방식)으로 한다. phase당 최대 5명이다.
 
 ## Done
-- `docs/proposals/game_proposal_v5.md`를 작성했다(약 560줄, 미커밋). P4 리뷰 지적 19건을 반영했고 기록은 §18.2에 있다.
-- 토론 산출물은 `_workspace/proposal_v5/`에 있다. brief, p1_research, p2a_design, p2b_bm_ops, p3a_build, p3b_release_qa, p4_review 폴더가 있고, 폴더마다 `_summary.md`가 phase 인계 문서다. `_workspace/`는 gitignore 대상이다.
-- 이전부터 미커밋 상태인 파일: `game_proposal_v4.md`, `isekai_proposal_v3.md`, `wuxia_isekai_proposal_v2.md`, `HANDOFF.md`.
-- 마지막 커밋은 `356f645`다(main).
+- 목업 v1(단순 픽셀): 스크래치 폴더 `mock.py` → `mockup_sheet.png`, `screen_1~3.png`.
+- 목업 v2(SF 갤러리 스타일): 스크래치 폴더 `mock_sf.py` → `sf_out/`(`sf_mockup_sheet.png`, `sf_screen_1~3.png`, `sf_assets.png`). 화면은 ① 판 안 플레이 ② 레벨업 3택 ③ 환생 결과이고, 에셋 시트도 있다.
+  - `docs/mockups/`로 복사를 마쳤다(`v1_simple/`, `v2_sf_style/`, `scripts/`). 스크립트의 출력 경로는 자기 폴더 기준 상대 경로로 바꿨다. 아직 커밋하지 않았다.
+- 확인 결과: `.mcp.json`에 `spritefusion`이 등록돼 있지만 `claude mcp list`에 나오지 않는다(미승인 또는 미인증).
+- 이전부터 미커밋 상태인 파일: `game_proposal_v4.md`, `game_proposal_v5.md`, `isekai_proposal_v3.md`, `wuxia_isekai_proposal_v2.md`, `HANDOFF.md`(git status 기준으로는 clean으로 표시된다. 다음 세션에서 다시 확인).
 
 ## Next
-1. 사용자가 v5 §17.2의 결정 13개를 확정한다. 특히 팀·착수일, 가제, SF 부분 충족 수용, 크레딧 약 2,300과 유료 플랜, W1 SF 검증 승인.
-2. 사용자가 요청하면 v4·v5와 미커밋 파일을 `main`에 커밋·푸시한다.
-3. W1 검증을 한다. SF 샘플 맵(크레딧 0)과 캐릭터 애니 1종(약 30~45크레딧, 승인 필요, `get_credits` 먼저)으로 zip 경로와 플러그인 경로를 비교한다. 인덱스 셰이더 A/B와 12px 계열 구분 테스트도 한다. 담당은 `level-pipeline-engineer`와 `technical-artist`다.
-4. `economy-balance-analyst`가 경제를 재계산한다. 보물방 6, 보급함, 전생 기억 노드(비용 5×3)를 반영하고 3유형 × 30일 시뮬레이션을 돌린다. 천장 27일과 챕터 12주 사이의 공백도 확인한다.
-5. Unity 6 2D 프로젝트를 만든다. 경로는 사용자에게 받는다.
-6. 출시 전 재확인: Google 결제 확률 공개 조항, 2026-10 게임산업법 개정, 인공지능기본법 가이드라인, SF 약관, Play 신규 계정 클로즈 테스트 요건, 한·일 픽셀 폰트 라이선스.
+1. 사용자가 요청하면 `docs/mockups/`를 커밋한다.
+2. 기획팀 18명 상세 기획 작업(구현팀 인계 수준)을 phase로 진행한다. 제안 구성(동시 5명 이하):
+   - P1 분석: commercial-game, mechanics, economy-balance, market-data, market-review
+   - P2 핵심 설계: level-designer, ux-onboarding, art-audio, storyteller, spritefusion-expert
+   - P3 BM·운영: bm-expert, live-ops-analytics, user-acquisition-marketer, store-compliance-specialist
+   - P4 품질·일정·리뷰: mobile-qa-lead, mobile-performance-engineer, mobile-producer, game-reviewer
+   - 산출물은 `_workspace/detail_spec/<phase>/`에 두고, 마지막에 `docs/specs/`로 구현팀 인계 문서를 통합한다.
+   - 시작 전에 phase 구성과 인계 문서 목차를 사용자에게 보여 주고 확인받는다.
+3. 남은 일(이전 세션): v5 §17.2의 결정 13개 확정, W1 SF 검증(크레딧 승인 필요), 경제 재계산, Unity 6 프로젝트 경로 받기.
 
 ## Key files
-- `docs/proposals/game_proposal_v5.md`: 현재 기준 제안서다. §3 세계관·해금, §5~6 메카닉·던전, §8 SF 파이프라인, §11 BM, §15 일정, §17 결정 항목이 있다.
-- `docs/proposals/game_proposal_v4.md`: v5가 "v4 §X 유지"로 참조하는 세부 규칙(감속, 가독성, 맵 규격)이 있다.
-- `_workspace/proposal_v5/*/_summary.md`: phase별 합의와 진행자 판정의 근거다.
-- `.claude/phases.json`, `docs/AGENTS.md`: 팀 구성 규칙과 에이전트 목록이다.
+- `docs/proposals/game_proposal_v5.md`: 기준 제안서다. §5 메카닉, §6 레벨, §10 UI, §17 결정 항목이 있다.
+- `docs/proposals/game_proposal_v4.md`: v5가 참조하는 세부 규칙이 있다.
+- `_workspace/proposal_v5/*/_summary.md`: 이전 phase 진행 방식의 예시이자 근거다.
+- `.claude/phases.json`, `docs/AGENTS.md`: phase 후보 풀과 에이전트 권한이 있다.
+- `docs/mockups/scripts/mock_sf.py`: SF 스타일 목업 생성기다. 스프라이트 그리드, 램프 음영, 외곽선 파이프라인이 있다.
 
 ## Open questions
-- v5 §17.2 결정 13개.
-- v1~v3 제안서 파일을 보관할지 정리할지(삭제는 승인이 필요하다).
-- CLAUDE.md의 브랜치 규칙을 main 직접 커밋에 맞게 고칠지.
+- 기획 18명 작업을 지금 시작할지, phase 구성안을 승인할지.
+- Sprite Fusion MCP를 연결할지(`/mcp`에서 승인·로그인).
+- v5 §17.2 결정 13개, v1~v3 파일 정리 여부.
