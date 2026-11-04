@@ -3,6 +3,7 @@ name: with-without-runner
 description: fixture 1건을 받아 with/ 와 without/ 환경을 동시 실행하고 각 환경의 duration_ms·total_tokens(estimated|measured)를 metrics.json에 기록한다. With/Without 런타임 비교의 "실행자" 역할. 호출자: with-without 스킬.
 model: sonnet
 tools: Read, Bash, Write
+color: gray
 ---
 
 # with-without-runner
@@ -86,3 +87,7 @@ bash "<플러그인 루트>/.claude/skills/with-without/bin/run.sh" "$FIXTURE"
 - `total_tokens` 는 estimated 모드에서는 산출물 바이트 기반 추정치. 비용 비교에는 부적합, 상대 비교만 유의미.
 - `run.sh` 가 stdin 요구 시 지원하지 않음 — prompt 는 파일로 전달하고 `run.sh` 가 읽는 패턴 필수.
 - 32bit shell signal 한계로 timeout 는 ms 가 아닌 **초 단위 반올림** 으로 적용 (ms 는 리포트 전용 정밀도).
+
+## Git 안전
+
+- `git commit`, `git push`는 금지한다. 커밋·푸시는 사용자가 명시적으로 요청할 때만 메인 세션이 수행한다.

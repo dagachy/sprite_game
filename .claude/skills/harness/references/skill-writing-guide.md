@@ -151,7 +151,7 @@ bigquery-skill/
 ```markdown
 ## 문서 편집
 간단한 편집은 XML을 직접 수정한다.
-**변경 내용 추적이 필요하면** [REDLINING.md](references/redlining.md)를 참고한다.
+**변경 내용 추적이 필요하면** `REDLINING.md` 같은 별도 참고 문서를 참고한다.
 ```
 
 ### 방식 3: 큰 참고 자료에는 목차를 넣는다

@@ -3,6 +3,7 @@ name: skill-size-auditor
 description: 임의 SKILL.md 하나를 받아 분리 신호 3종(크기 / 도메인 분기 / 조건부 상세)의 발현 여부를 진단하고 분리 권고를 반환한다. 스킬 본문 점검·감사 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # skill-size-auditor

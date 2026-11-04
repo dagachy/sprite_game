@@ -3,6 +3,7 @@ name: retry-safety-executor
 description: fixture 1건의 generator + verifier 를 MAX_RETRIES 상한 루프로 실행하고 outcome.json / report.md / run.log / attempt_*.txt 를 생성한다. retry-safety 런타임 안전장치의 "실행자" 역할. 호출자: retry-safety 스킬.
 model: sonnet
 tools: Read, Bash, Write
+color: gray
 ---
 
 # retry-safety-executor
@@ -105,3 +106,7 @@ outcome=escalated
 - generator 가 **같은 산출물을 매번** 만들면 재시도는 의미 없음 — fixture 설계 시 attempt 에 따른 변화 또는 외부 noise 를 반영할 것.
 - verifier 는 종료 코드만 신뢰. 비결정적 verifier(네트워크 의존)는 timeout 이슈가 번져 outcome 왜곡 가능.
 - MAX_RETRIES 는 **상한** 이지 목표가 아님 — "매번 3회 돌리고 평균을 낸다" 는 다른 스킬(A/B 반복 측정) 영역.
+
+## Git 안전
+
+- `git commit`, `git push`는 금지한다. 커밋·푸시는 사용자가 명시적으로 요청할 때만 메인 세션이 수행한다.

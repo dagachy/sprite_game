@@ -3,6 +3,7 @@ name: with-without-grader
 description: runner가 생성한 result/with/ + result/without/ 에 fixture의 assertions/*.sh 를 동일하게 적용해 pass_rate 를 계산하고, 변별력 있는/없는 단언을 라벨링한 comparison.md 를 만든다. 호출자: with-without 스킬.
 model: sonnet
 tools: Read, Bash, Write
+color: gray
 ---
 
 # with-without-grader
@@ -118,3 +119,7 @@ bash "<플러그인 루트>/.claude/skills/with-without/bin/grade.sh" "$RESULT"
 - 단언 스크립트의 **종료 코드만** 신뢰 — 콘솔 출력은 무시(필요하면 단언 안에서 파일로 남길 것).
 - 두 환경 산출물 경로 외 접근은 금지 — 전역 상태 참조 단언은 F1 오염 위험.
 - 토큰 비교는 estimated 모드일 때 상대적 지표로만 사용 (바이트/4 가정).
+
+## Git 안전
+
+- `git commit`, `git push`는 금지한다. 커밋·푸시는 사용자가 명시적으로 요청할 때만 메인 세션이 수행한다.

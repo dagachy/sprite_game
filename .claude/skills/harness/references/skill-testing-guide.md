@@ -176,7 +176,7 @@ return { results: mapped }
 
 ### 5-4. 채점 결과 스키마
 
-`skill-writing-guide.md`에서 정한 `grading.json` 형식(`text`/`passed`/`evidence`와 `summary`)을 따른다.
+라우터의 「스킬 작성 가이드」에서 정한 `grading.json` 형식(`text`/`passed`/`evidence`와 `summary`)을 따른다.
 
 ## 6. 전문 에이전트 활용
 

@@ -3,6 +3,7 @@ name: menu-pattern-auditor
 description: 임의 SKILL.md와 같은 폴더의 references/ 세트를 받아 메뉴판 원칙(라우터 크기·조건부 링크·본문 금지·cross-ref 금지)의 준수 여부를 진단한다. 라우터 패턴 적합성 점검 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # menu-pattern-auditor

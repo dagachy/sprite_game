@@ -3,6 +3,7 @@ name: agent-frontmatter-auditor
 description: 임의 agent .md 하나를 받아 frontmatter 필수 필드(name/description/model/tools) + 본문 프롬프트 완비 여부를 진단한다. 에이전트 메타 점검 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # agent-frontmatter-auditor

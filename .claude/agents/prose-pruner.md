@@ -3,6 +3,7 @@ name: prose-pruner
 description: 임의 SKILL.md 하나를 받아 컨텍스트 절약 3원칙(일반 지식 / 도메인 관례 / 산문 압축) 위반을 진단하고 가지치기된 본문·톤 변환·diff 리포트를 생성한다. 스킬 본문 다이어트 요청 시 사용.
 model: sonnet
 tools: Read, Write, Bash
+color: blue
 ---
 
 # prose-pruner
@@ -165,3 +166,7 @@ tools: Read, Write, Bash
 - 3원칙 정의가 바뀌면 `PRINCIPLES_PATH` 를 교체해 주입한다 (에이전트 본체 수정 불필요).
 - `MIN_REDUCTION_PCT` 미달 시 산출물은 저장하지만 품질 경고를 남긴다. 호출자가 재진단할지 결정한다.
 - 한/영 혼용 본문을 전제한다. 다른 언어는 패턴 신호가 흐려질 수 있다.
+
+## Git 안전
+
+- `git commit`, `git push`는 금지한다. 커밋·푸시는 사용자가 명시적으로 요청할 때만 메인 세션이 수행한다.

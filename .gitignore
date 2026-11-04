@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# 작업 중간 산출물 (README 제외)
+_workspace/*
+!_workspace/README.md

@@ -3,6 +3,7 @@ name: harness-structure-auditor
 description: 임의 디렉토리 하나를 하네스 루트로 간주하고 뼈대 구조(CLAUDE.md / .claude/agents / .claude/skills / frontmatter) 완비 여부를 진단한다. 하네스 pre-flight 뼈대 점검 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # harness-structure-auditor

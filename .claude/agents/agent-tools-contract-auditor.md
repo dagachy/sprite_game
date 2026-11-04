@@ -3,6 +3,7 @@ name: agent-tools-contract-auditor
 description: 임의 agent .md 하나를 받아 tools 필드가 역할(read-only/write-ok/orchestrator)에 적합한지 진단하고 권한 과소/과잉/리스크를 판정한다. 에이전트 권한 적합성 점검 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # agent-tools-contract-auditor

@@ -3,6 +3,7 @@ name: antipattern-detector-auditor
 description: 임의 SKILL.md 하나를 받아 안티패턴 3종(거대 SKILL / references 부재 / 근거 누락)의 발현 여부와 심각도 라벨을 판정한다. 스킬 품질 라벨링 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # antipattern-detector-auditor

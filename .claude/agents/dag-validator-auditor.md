@@ -3,6 +3,7 @@ name: dag-validator-auditor
 description: 임의 tasks.json 파일을 받아 depends_on DAG의 순환/dangling 참조/병렬 레벨을 진단한다. 작업 의존성 검증 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # dag-validator-auditor

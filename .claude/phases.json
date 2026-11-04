@@ -1,0 +1,15 @@
+{
+  "_comment": "작업마다 팀을 새로 구성한다. 이 파일은 phase별 후보 풀이며, 한 phase에서 동시에 활성화되는 에이전트는 max_concurrent 이하여야 한다. phase 산출물은 _workspace/<phase>/<agent>/ 에 쓰고 다음 phase가 읽는다.",
+  "phases": {
+    "analysis": ["commercial-game-analyst", "market-review-analyst", "mechanics-analyst", "economy-balance-analyst", "bm-expert"],
+    "design": ["level-designer", "ux-onboarding-analyst", "art-audio-analyst", "live-ops-analytics", "spritefusion-expert"],
+    "build": ["gameplay-programmer", "ui-implementer", "level-pipeline-engineer", "technical-artist", "backend-engineer"],
+    "qa_perf": ["mobile-qa-lead", "mobile-performance-engineer"],
+    "release": ["build-release-engineer", "store-compliance-specialist", "user-acquisition-marketer"],
+    "produce": ["mobile-producer"],
+    "harness_audit_structure": ["harness-structure-auditor", "agent-frontmatter-auditor", "agent-tools-contract-auditor", "antipattern-detector-auditor", "skill-size-auditor"],
+    "harness_audit_rules": ["menu-pattern-auditor", "team-size-governor-auditor", "dag-validator-auditor", "prose-pruner", "token-auditor"],
+    "harness_eval": ["retry-safety-executor", "with-without-runner", "with-without-grader"]
+  },
+  "max_concurrent": 5
+}

@@ -190,14 +190,14 @@ while (budget.total && budget.remaining() > 50_000) {
 
 ```javascript
 const r = await agent(
-  `_workspace/02_draft.md 파일을 검증하고 발견한 항목을 반환하라`,
+  `_workspace/02_draft/writer/draft.md 파일을 검증하고 발견한 항목을 반환하라`,
   { agentType: 'qa-inspector',      // .claude/agents/qa-inspector.md
     schema: FINDINGS,               // 사용자 정의 유형도 지정한 스키마에 맞는 결과만 반환
     effort: 'high' })               // 검증 단계에서는 추론 강도를 높이는 것이 좋다
 ```
 
 - `agentType`을 생략하면 기본 워크플로 서브에이전트를 사용한다.
-- `model`은 각 단계의 업무 특성에 따라 고른다. 반복적인 수집·변환 단계에는 `sonnet`, 깊이 있는 검증·심사·설계 단계에는 `opus`, 전체 계획·장기 실행 단계에는 `fable`을 쓴다. 자세한 기준은 `model-selection-guide.md`를 참고한다.
+- `model`은 각 단계의 업무 특성에 따라 고른다. 반복적인 수집·변환 단계에는 `sonnet`, 깊이 있는 검증·심사·설계 단계에는 `opus`, 전체 계획·장기 실행 단계에는 `fable`을 쓴다. 자세한 기준은 라우터의 「모델 선택 가이드」를 참고한다.
 - 여러 에이전트가 파일을 동시에 수정해 충돌할 수 있다면 `isolation: 'worktree'`를 지정한다. 작업 환경을 준비하는 데 비용이 드므로 실제로 충돌할 가능성이 있을 때만 쓴다.
 
 ## 7. 주의할 점(검증 목록)

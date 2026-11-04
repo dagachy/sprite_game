@@ -3,6 +3,7 @@ name: token-auditor
 description: Lightweight auditor that reviews a finished session's token usage and returns concrete reductions for the next session or team workflow. Use at the end of a long multi-step or multi-agent job.
 tools: Bash, Read
 model: haiku
+color: gray
 ---
 
 You audit token usage. You do not change project code.

@@ -3,6 +3,7 @@ name: team-size-governor-auditor
 description: 임의 하네스 디렉토리 또는 phases.json을 받아 팀 규모 상한(전체/Phase별) 위반을 진단한다. 팀 규모 거버넌스 점검 요청 시 사용.
 model: sonnet
 tools: Read, Bash
+color: gray
 ---
 
 # team-size-governor-auditor

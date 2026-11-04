@@ -56,7 +56,7 @@ Workflow 사용에 동의한 것으로 본다. 기본 에이전트 수는 {N}명
 
 ### 2단계: 워크플로 실행
 
-Workflow 도구에 다음 스크립트를 전달한다. 자세한 예시는 harness 스킬의 `workflow-recipes.md`에서 확인한다.
+Workflow 도구에 다음 스크립트를 전달한다. 자세한 예시는 harness 스킬 라우터의 「워크플로 예시」에서 확인한다.
 
 - `meta`: `name`은 '{domain}-run', `phases`는 [{수집}, {검증}, {종합}]
 - 수집: pipeline(args.items, item => agent(..., {schema: COLLECT}))
@@ -154,16 +154,16 @@ v1처럼 명시적인 팀 객체를 만들지 않는다. 세션에서 이름을 
 
 | 팀원 | 출력 경로 |
 |------|----------|
-| {teammate-1} | `_workspace/{phase}_{teammate-1}_{artifact}.md` |
-| {teammate-2} | `_workspace/{phase}_{teammate-2}_{artifact}.md` |
+| {teammate-1} | `_workspace/{phase}/{teammate-1}/{artifact}.md` |
+| {teammate-2} | `_workspace/{phase}/{teammate-2}/{artifact}.md` |
 
 ### 4단계: 산출물 동결
 
 이름 있는 에이전트는 완료를 보고한 뒤에도 메시지를 받는다. 다른 팀원의 뒤늦은 질문에 답하다가 이미 넘긴 산출물을 고치면, 다음 단계는 바뀌기 전 내용을 읽고 작업하게 된다. 팀원끼리 교차 확인하는 메시지는 오류를 잡아낼 수 있으므로 막지 않는다. 대신 다음 단계가 읽을 파일이 도중에 바뀌지 않도록 단계를 넘길 때마다 산출물을 동결한다.
 
 1. TaskList와 완료 알림으로 직전 단계를 맡은 모든 팀원이 완료를 보고했는지 확인한다.
-2. 해당 팀원에게 SendMessage로 동결을 알린다. 예: "{단계} 산출물을 동결한다. 이후 고칠 내용이 생기면 기존 파일을 고치지 말고 `{phase}_{teammate}_{artifact}_v2.md`처럼 새 버전 파일로 쓴 뒤 리더에게 알려라."
-3. 산출물 해시를 기록한다. 예: `shasum _workspace/{phase}_* > _workspace/freeze_{phase}.sha` (`md5sum`을 써도 된다)
+2. 해당 팀원에게 SendMessage로 동결을 알린다. 예: "{단계} 산출물을 동결한다. 이후 고칠 내용이 생기면 기존 파일을 고치지 말고 `{phase}/{teammate}/{artifact}_v2.md`처럼 새 버전 파일로 쓴 뒤 리더에게 알려라."
+3. 산출물 해시를 기록한다. 예: `shasum _workspace/{phase}/*/* > _workspace/{phase}/freeze.sha` (`md5sum`을 써도 된다)
 4. 다음 단계를 맡은 에이전트의 프롬프트에 산출물 경로와 해시 파일 경로를 함께 넘긴다.
 
 협업 단계가 여러 개면 단계 경계마다 같은 절차를 밟는다.
@@ -171,7 +171,7 @@ v1처럼 명시적인 팀 객체를 만들지 않는다. 세션에서 이름을 
 ### 5단계: 통합
 1. TaskList로 모든 작업이 끝났는지 확인한다.
 2. Read로 각 산출물을 읽고 {통합/검증 로직}을 적용한다.
-3. 최종 산출물을 만들기 직전에 `shasum -c _workspace/freeze_{phase}.sha`처럼 해시를 다시 계산해 동결한 산출물이 바뀌지 않았는지 확인한다. 해시가 다르거나 새 버전 파일이 생겼으면 무엇이 바뀌었는지 확인하고, 바뀌기 전 내용을 읽은 단계를 다시 실행할지 정한다.
+3. 최종 산출물을 만들기 직전에 `shasum -c _workspace/{phase}/freeze.sha`처럼 해시를 다시 계산해 동결한 산출물이 바뀌지 않았는지 확인한다. 해시가 다르거나 새 버전 파일이 생겼으면 무엇이 바뀌었는지 확인하고, 바뀌기 전 내용을 읽은 단계를 다시 실행할지 정한다.
 4. 최종 산출물을 `{output-path}/{filename}`에 만든다.
 
 ### 6단계: 마무리
@@ -228,8 +228,8 @@ description: "{도메인}의 독립 작업을 서브에이전트에 위임한다
 
 | 에이전트 | `subagent_type` | 입력 | 산출물 |
 |---------|--------------|------|------|
-| {agent-1} | {타입} | {소스} | `_workspace/{phase}_{agent}_{artifact}.md` |
-| {agent-2} | {타입} | {소스} | `_workspace/{phase}_{agent}_{artifact}.md` |
+| {agent-1} | {타입} | {소스} | `_workspace/{phase}/{agent}/{artifact}.md` |
+| {agent-2} | {타입} | {소스} | `_workspace/{phase}/{agent}/{artifact}.md` |
 
 `{타입}`에는 사용자 정의 유형의 이름이나 기본 제공 유형을 적는다.
 
@@ -277,7 +277,7 @@ description: "{도메인}의 독립 작업을 서브에이전트에 위임한다
 2. **워크플로 조율 모드에서는 스크립트 구조를 자세히 적는다.** `phases`, `schema` 요약, `args`에 넣을 항목을 빠짐없이 명시한다.
 3. **지속형 에이전트 협업 모드에서는 `name`, SendMessage, TaskCreate 사용법을 자세히 적는다.** 실행할 에이전트 목록, 통신 규칙, 작업 간 의존 관계, 단계 경계의 산출물 동결 절차를 포함한다.
 4. **서브에이전트 위임 모드에서는 Agent 매개변수를 빠짐없이 적는다.** `name`을 지정하지 않는 단발 실행인지 밝히고, `subagent_type`, `prompt`, 출력 경로를 명시한다.
-5. **파일 경로를 분명히 적는다.** `_workspace/`를 기준으로 경로를 쓰고, 파일 이름은 `{phase}_{agent}_{artifact}.{ext}` 규칙을 따른다.
+5. **파일 경로를 분명히 적는다.** `_workspace/`를 기준으로 경로를 쓰고, phase와 에이전트는 디렉터리로 나누고(`{phase}/{agent}/{artifact}.{ext}`), 파일 이름은 `{artifact}.{ext}`로 짓는다.
 6. **단계 간 의존 관계를 밝힌다.** 실행 모드가 바뀌는 지점에서는 데이터가 어떻게 넘어가는지 특히 자세히 적는다.
 7. **실제로 일어날 수 있는 오류에 대비한다.** 모든 작업이 성공한다고 가정하지 말고 상황별 처리 방법을 정한다.
 8. **테스트 시나리오를 반드시 넣는다.** 정상 시나리오 한 가지와 오류 시나리오 한 가지 이상을 작성한다.
