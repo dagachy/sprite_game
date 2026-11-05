@@ -1,4 +1,8 @@
 .godot/
 /android/
 *.keystore
+*.jks
+*.p12
+*.mobileprovision
+*.p8
 export_credentials.cfg

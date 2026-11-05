@@ -425,7 +425,7 @@ func _resolve_crush() -> void:
 	px = best.x
 	py = best.y
 	log_event.emit("crush", {"t": t})
-	hurt(10.0, &"crush", true, true)
+	hurt(10.0, &"crush", true, true, &"crush")
 
 func _elite_alive() -> bool:
 	for i in enemies.n:
@@ -767,7 +767,7 @@ func _hazards(wdt: float) -> void:
 		haz_acc += wdt
 		while haz_acc >= tick - 0.0001:
 			haz_acc -= tick
-			hurt(bal.hazard_player_tick, &"hazard", true, true)
+			hurt(bal.hazard_player_tick, &"hazard", true, true, &"hazard")
 			if ended:
 				return
 		if haz_acc < 0.0:

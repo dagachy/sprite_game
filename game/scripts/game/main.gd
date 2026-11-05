@@ -44,6 +44,11 @@ var run_seq: int = 0
 var run_id_cur: String = ""   # 현재 판 run_id (P3 형식). start_run 에서 설정
 var cur_preset: StringName = &""   # 현재 판의 C3 프리셋 ID (일반 판이면 빈 값)
 var preset_pick: OptionButton      # 디버그 패널: 프리셋 선택 (디버그 빌드에서만 생성)
+const PREP_CHUNK: int = 400   # 프리셋 도달 진행: 프레임당 step 수 (CAP-06)
+var prep_active: bool = false   # 프리셋 도달 진행 중 (디버그 빌드에서만 true)
+var prep_state: Dictionary = {}
+var prep_label: Label = null   # "준비 중" 표시 (디버그 빌드에서만 생성)
+var hazard_overlay: Node2D = null   # CAP-02 위험 셀 강조 (디버그 빌드에서만 생성)
 
 func _ready() -> void:
 	bal = Balance.load_default()
@@ -156,14 +161,20 @@ func start_run(preset: StringName = &"") -> void:
 	run_seq += 1
 	cur_preset = preset
 	var sv: int = fixed_seed_value if fixed_seed else int(Time.get_ticks_usec() & 0x7FFFFFFF)
-	if preset != &"":
+	prep_active = false
+	if hazard_overlay != null:
+		hazard_overlay.queue_free()
+		hazard_overlay = null
+	if prep_label != null:
+		prep_label.visible = false
+	if preset != &"" and OS.is_debug_build():
 		sv = int(CapturePresets.PRESETS[preset]["seed"])
 	# P3 run_id: {UTC일자}-{UTC시각}-{seed 8hex}-{run_idx}. run_idx = 설치 후 누적 판 번호(정산 전 기준 +1)
 	var utc := Time.get_datetime_dict_from_system(true)
 	run_id_cur = "%04d%02d%02d-%02d%02d%02d-%08x-%d" % [utc["year"], utc["month"], utc["day"],
 		utc["hour"], utc["minute"], utc["second"], sv & 0xFFFFFFFF, RunState.meta.runs_played + 1]
 	Log.run_id = run_id_cur
-	if preset != &"":
+	if preset != &"" and OS.is_debug_build():
 		# D5: 프리셋은 저장 메타를 읽지 않고 고정 메타(빈 MetaState)를 쓴다
 		battle = CapturePresets.make_battle(preset, bal, db, MetaState.new())
 	else:
@@ -184,11 +195,25 @@ func start_run(preset: StringName = &"") -> void:
 	result_shown = false
 	touch_idx = -1
 	accum = 0.0
-	if preset != &"":
-		# 신호 연결 뒤에 진행해야 3택 UI 가 열린다. 도달 후 C2 정지로 화면을 고정한다
-		CapturePresets.advance(battle, preset)
+	if preset != &"" and OS.is_debug_build():
+		# CAP-02: hazard_highlight 프리셋만 오버레이를 붙인다 (디버그 빌드 전용)
+		if CapturePresets.PRESETS[preset].get("overrides", {}).get("hazard_highlight", false):
+			hazard_overlay = load("res://scripts/debug/hazard_overlay.gd").new()
+			view.add_child(hazard_overlay)
+			hazard_overlay.battle = battle
+			hazard_overlay.enabled = true
+		# CAP-06: 신호 연결 뒤에 _process 에서 프레임당 PREP_CHUNK step 씩 진행한다 (3택 UI 가 열리도록).
+		# 완료되면 C2 정지로 화면을 고정한다. 진행 중에는 입력과 일반 step 을 막는다.
+		prep_state = {}
+		prep_active = true
 		world_paused = true
 		step_once = false
+		if prep_label == null:
+			prep_label = _label(Vector2(0, 170), 14)
+			prep_label.size = Vector2(216, 24)
+			prep_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			prep_label.text = "준비 중"
+		prep_label.visible = true
 
 ## 디버그 패널: 선택한 프리셋으로 판을 시작한다.
 func _on_preset_go() -> void:
@@ -199,6 +224,18 @@ func _on_preset_go() -> void:
 
 func _process(delta: float) -> void:
 	if battle == null:
+		return
+	if prep_active and OS.is_debug_build():
+		# 청크 사이에 입력·delta·일반 step 을 넣지 않는다 (결정성)
+		if CapturePresets.advance_chunk(battle, cur_preset, prep_state, PREP_CHUNK):
+			prep_active = false
+			prep_label.visible = false
+			world_paused = true
+			step_once = false
+			# 프리프 중 열린 3택은 _on_offer_ready 가 무시했다. 정지점에서 3택이 열려 있으면 이제 표시하고 잠금을 건다.
+			if battle.awaiting_pick:
+				_on_offer_ready(battle.current_offer, battle.rerolls_left, battle.offer_source)
+		view.queue_redraw()
 		return
 	if touch_idx < 0:
 		var d := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_up", "ui_down"))
@@ -248,7 +285,7 @@ func _update_hud(delta: float) -> void:
 			hint_label.text = ""
 
 func _unhandled_input(event: InputEvent) -> void:
-	if battle == null or battle.awaiting_pick or battle.ended:
+	if battle == null or battle.awaiting_pick or battle.ended or prep_active:
 		return
 	if event is InputEventScreenTouch:
 		var st: InputEventScreenTouch = event
@@ -271,6 +308,8 @@ func _input(event: InputEvent) -> void:
 	# F1~F9 디버그 단축키는 디버그 빌드에서만 동작한다 (AC-43)
 	if not OS.is_debug_build() and k.keycode in [KEY_F1, KEY_F2, KEY_F3, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9]:
 		return
+	if prep_active:
+		return   # 프리셋 도달 진행 중에는 단축키도 막는다 (CAP-06)
 	match k.keycode:
 		KEY_F6:
 			_capture()
@@ -314,6 +353,8 @@ func _card_text(c: Dictionary) -> String:
 	return "[%s] %s  Lv%d" % [tag, String(c["id"]), int(c["level"])]
 
 func _on_offer_ready(cards: Array, rerolls_left: int, _source: StringName) -> void:
+	if prep_active:
+		return   # 프리프 자동 pick 구간: 박스를 띄우거나 offer_lock 을 걸지 않는다 (종료 시점에 따로 표시)
 	for i in 3:
 		offer_buttons[i].text = _card_text(cards[i]) if i < cards.size() else ""
 		offer_buttons[i].visible = i < cards.size()
