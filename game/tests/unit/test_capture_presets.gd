@@ -94,3 +94,9 @@ func test_cap04_stop_exposes_offer_for_deferred_ui() -> void:
 	check(b.awaiting_pick, "stops with offer open")
 	check(b.current_offer.size() > 0, "current_offer readable")
 	check(b.rerolls_left >= 0, "rerolls_left readable")
+
+func test_skips_record_guard() -> void:
+	check(not CapturePresets.skips_record(&"", false), "normal run records")
+	check(CapturePresets.skips_record(&"CAP-01", false), "preset run skips record")
+	check(CapturePresets.skips_record(&"", true), "debug-granted run skips record")
+	check(CapturePresets.skips_record(&"CAP-01", true), "preset+granted skips record")

@@ -47,7 +47,16 @@ var preset_pick: OptionButton      # 디버그 패널: 프리셋 선택 (디버�
 const PREP_CHUNK: int = 400   # 프리셋 도달 진행: 프레임당 step 수 (CAP-06)
 var prep_active: bool = false   # 프리셋 도달 진행 중 (디버그 빌드에서만 true)
 var prep_state: Dictionary = {}
+var capturing: bool = false   # _capture() 가 snap 을 끝낼 때까지 true (흔들림 억제, UA-4)
+var prep_failed: bool = false   # 프리셋 도달 실패(C-3): PNG 를 만들지 않는다
+var offer_hidden: bool = false   # hide_offer 프리셋: 박스만 숨기고 awaiting_pick·잠금은 유지
 var prep_label: Label = null   # "준비 중" 표시 (디버그 빌드에서만 생성)
+var dbg_weapon_pick: OptionButton   # 디버그 패널: 무기/패시브 부여 (디버그 빌드에서만 생성)
+var dbg_weapon_lv: SpinBox
+var dbg_passive_pick: OptionButton
+var dbg_passive_lv: SpinBox
+var dbg_grant_label: Label
+var debug_granted: bool = false   # 이번 판에 디버그 부여 성공 시 true. start_run 에서 리셋, true 면 기록·세이브 안 함
 var hazard_overlay: Node2D = null   # CAP-02 위험 셀 강조 (디버그 빌드에서만 생성)
 
 func _ready() -> void:
@@ -133,9 +142,10 @@ func _build_preset_panel() -> void:
 	preset_pick.position = Vector2(6, 352)
 	preset_pick.custom_minimum_size = Vector2(150, 24)
 	preset_pick.add_theme_font_size_override("font_size", 8)
-	for id in CapturePresets.ids():
+	var cp = load("res://scripts/debug/capture_presets.gd")   # 디버그 전용 호출 경로(OS.is_debug_build() 가드 안에서만 호출됨)
+	for id in cp.ids():
 		var idx: int = preset_pick.item_count
-		preset_pick.add_item("%s %s" % [String(id), String(CapturePresets.PRESETS[id]["label"])])
+		preset_pick.add_item("%s %s" % [String(id), String(cp.PRESETS[id]["label"])])
 		preset_pick.set_item_metadata(idx, id)
 	ui.add_child(preset_pick)
 	var go := Button.new()
@@ -145,6 +155,62 @@ func _build_preset_panel() -> void:
 	go.add_theme_font_size_override("font_size", 8)
 	go.pressed.connect(_on_preset_go)
 	ui.add_child(go)
+	_build_grant_panel()
+
+## 디버그 패널: 무기·패시브 부여 (TD 결정4 B). id 목록은 Defs 테이블에서 읽기만 한다.
+func _build_grant_panel() -> void:
+	var w := _grant_row(Vector2(6, 300), Defs.WEAPONS.keys(), 0, Defs.MAX_LEVEL, Defs.MAX_LEVEL, "무기", _on_grant_weapon)
+	dbg_weapon_pick = w[0]
+	dbg_weapon_lv = w[1]
+	var p := _grant_row(Vector2(6, 326), Defs.PASSIVES.keys(), 1, Defs.MAX_LEVEL, 1, "패시브", _on_grant_passive)
+	dbg_passive_pick = p[0]
+	dbg_passive_lv = p[1]
+	dbg_grant_label = Label.new()
+	dbg_grant_label.position = Vector2(6, 280)
+	dbg_grant_label.add_theme_font_size_override("font_size", 8)
+	ui.add_child(dbg_grant_label)
+
+func _grant_row(pos: Vector2, ids: Array, lo: int, hi: int, init: int, btn_text: String, cb: Callable) -> Array:
+	var pick := OptionButton.new()
+	pick.position = pos
+	pick.custom_minimum_size = Vector2(70, 22)
+	pick.add_theme_font_size_override("font_size", 8)
+	for id in ids:
+		pick.add_item(String(id))
+		pick.set_item_metadata(pick.item_count - 1, id)
+	ui.add_child(pick)
+	var sp := SpinBox.new()
+	sp.position = pos + Vector2(74, 0)
+	sp.custom_minimum_size = Vector2(56, 22)
+	sp.min_value = lo
+	sp.max_value = hi
+	sp.step = 1
+	sp.value = init
+	ui.add_child(sp)
+	var bt := Button.new()
+	bt.text = btn_text
+	bt.position = pos + Vector2(134, 0)
+	bt.custom_minimum_size = Vector2(50, 22)
+	bt.add_theme_font_size_override("font_size", 8)
+	bt.pressed.connect(cb)
+	ui.add_child(bt)
+	return [pick, sp]
+
+func _on_grant_weapon() -> void:
+	_grant(dbg_weapon_pick, dbg_weapon_lv, true)
+
+func _on_grant_passive() -> void:
+	_grant(dbg_passive_pick, dbg_passive_lv, false)
+
+func _grant(pick: OptionButton, sp: SpinBox, is_weapon: bool) -> void:
+	if not OS.is_debug_build() or battle == null or pick.selected < 0:
+		return
+	var id: StringName = pick.get_item_metadata(pick.selected)
+	var lv: int = int(sp.value)
+	var ok: bool = battle.debug_set_weapon(id, lv) if is_weapon else battle.debug_give_passive(id, lv)
+	if ok:
+		debug_granted = true
+	dbg_grant_label.text = "%s %s x%d %s" % ["무기" if is_weapon else "패시브", String(id), lv, ("OK" if ok else "실패") + ("\n부여됨: 기록 안 함" if debug_granted else "")]
 
 func _label(pos: Vector2, size_px: int) -> Label:
 	var l := Label.new()
@@ -160,15 +226,21 @@ func _label(pos: Vector2, size_px: int) -> Label:
 func start_run(preset: StringName = &"") -> void:
 	run_seq += 1
 	cur_preset = preset
+	debug_granted = false
+	if dbg_grant_label != null:
+		dbg_grant_label.text = ""
 	var sv: int = fixed_seed_value if fixed_seed else int(Time.get_ticks_usec() & 0x7FFFFFFF)
 	prep_active = false
+	prep_failed = false
+	offer_hidden = false
 	if hazard_overlay != null:
 		hazard_overlay.queue_free()
 		hazard_overlay = null
 	if prep_label != null:
 		prep_label.visible = false
 	if preset != &"" and OS.is_debug_build():
-		sv = int(CapturePresets.PRESETS[preset]["seed"])
+		var cp = load("res://scripts/debug/capture_presets.gd")
+		sv = int(cp.PRESETS[preset]["seed"])
 	# P3 run_id: {UTC일자}-{UTC시각}-{seed 8hex}-{run_idx}. run_idx = 설치 후 누적 판 번호(정산 전 기준 +1)
 	var utc := Time.get_datetime_dict_from_system(true)
 	run_id_cur = "%04d%02d%02d-%02d%02d%02d-%08x-%d" % [utc["year"], utc["month"], utc["day"],
@@ -176,7 +248,8 @@ func start_run(preset: StringName = &"") -> void:
 	Log.run_id = run_id_cur
 	if preset != &"" and OS.is_debug_build():
 		# D5: 프리셋은 저장 메타를 읽지 않고 고정 메타(빈 MetaState)를 쓴다
-		battle = CapturePresets.make_battle(preset, bal, db, MetaState.new())
+		var cp = load("res://scripts/debug/capture_presets.gd")
+		battle = cp.make_battle(preset, bal, db, MetaState.new())
 	else:
 		battle = Battle.new(bal, sv, &"sword", RunState.meta, RunState.is_early_run(), db)
 		battle.god_mode = god   # 프리셋은 자체 god 설정을 유지해야 결정성이 지켜진다
@@ -184,10 +257,11 @@ func start_run(preset: StringName = &"") -> void:
 	battle.banner.connect(_on_banner)
 	battle.hint.connect(_on_hint)
 	battle.run_ended.connect(_on_run_ended)
-	battle.log_event.connect(func(n: String, d: Dictionary) -> void: Log.event(n, d))
-	# P3 이벤트 정본 중 P0 필수 (run_start, 구역 A 진입)
-	Log.event("run_start", {"seed": sv, "class": "sword", "early": battle.early_run})
-	Log.event("zone_enter", {"zone": "A", "t": 0.0})
+	if preset == &"":   # 프리셋 판은 events.jsonl 도 쓰지 않는다
+		battle.log_event.connect(func(n: String, d: Dictionary) -> void: Log.event(n, d))
+		# P3 이벤트 정본 중 P0 필수 (run_start, 구역 A 진입)
+		Log.event("run_start", {"seed": sv, "class": "sword", "early": battle.early_run})
+		Log.event("zone_enter", {"zone": "A", "t": 0.0})
 	view.battle = battle
 	offer_box.visible = false
 	result_box.visible = false
@@ -197,13 +271,15 @@ func start_run(preset: StringName = &"") -> void:
 	accum = 0.0
 	if preset != &"" and OS.is_debug_build():
 		# CAP-02: hazard_highlight 프리셋만 오버레이를 붙인다 (디버그 빌드 전용)
-		if CapturePresets.PRESETS[preset].get("overrides", {}).get("hazard_highlight", false):
+		var cp = load("res://scripts/debug/capture_presets.gd")
+		if cp.PRESETS[preset].get("overrides", {}).get("hazard_highlight", false):
 			hazard_overlay = load("res://scripts/debug/hazard_overlay.gd").new()
 			view.add_child(hazard_overlay)
 			hazard_overlay.battle = battle
 			hazard_overlay.enabled = true
 		# CAP-06: 신호 연결 뒤에 _process 에서 프레임당 PREP_CHUNK step 씩 진행한다 (3택 UI 가 열리도록).
 		# 완료되면 C2 정지로 화면을 고정한다. 진행 중에는 입력과 일반 step 을 막는다.
+		view.position = Vector2.ZERO   # 이전 판의 흔들림 오프셋을 지운다 (UA-4)
 		prep_state = {}
 		prep_active = true
 		world_paused = true
@@ -212,7 +288,7 @@ func start_run(preset: StringName = &"") -> void:
 			prep_label = _label(Vector2(0, 170), 14)
 			prep_label.size = Vector2(216, 24)
 			prep_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			prep_label.text = "준비 중"
+		prep_label.text = "준비 중"
 		prep_label.visible = true
 
 ## 디버그 패널: 선택한 프리셋으로 판을 시작한다.
@@ -227,12 +303,19 @@ func _process(delta: float) -> void:
 		return
 	if prep_active and OS.is_debug_build():
 		# 청크 사이에 입력·delta·일반 step 을 넣지 않는다 (결정성)
-		if CapturePresets.advance_chunk(battle, cur_preset, prep_state, PREP_CHUNK):
+		var cp = load("res://scripts/debug/capture_presets.gd")
+		if cp.advance_chunk(battle, cur_preset, prep_state, PREP_CHUNK):
 			prep_active = false
 			prep_label.visible = false
 			world_paused = true
 			step_once = false
+			if cp.reach_failed(battle, cur_preset):
+				# C-3: 3택 도달 전 사망. 실패로 기록하고 PNG·재시도 없음. god 값은 그대로.
+				prep_failed = true
+				prep_label.text = "도달 실패: 사망 t=%.1f" % battle.t
+				prep_label.visible = true
 			# 프리프 중 열린 3택은 _on_offer_ready 가 무시했다. 정지점에서 3택이 열려 있으면 이제 표시하고 잠금을 건다.
+			offer_hidden = cp.hides_offer(cur_preset)
 			if battle.awaiting_pick:
 				_on_offer_ready(battle.current_offer, battle.rerolls_left, battle.offer_source)
 		view.queue_redraw()
@@ -262,7 +345,7 @@ func _process(delta: float) -> void:
 			accum -= STEP
 			guard += 1
 	view.position = Vector2.ZERO
-	if bal.shake_enabled and battle.shake_left > 0.0:
+	if bal.shake_enabled and battle.shake_left > 0.0 and not world_paused and not capturing:
 		view.position = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * battle.shake_amp
 	view.queue_redraw()
 	_update_hud(delta)
@@ -341,9 +424,13 @@ func _input(event: InputEvent) -> void:
 
 ## C5: 현재 화면을 user://captures/ 에 PNG 로 저장한다(디버그 전용).
 func _capture() -> void:
-	if cap == null:
+	if cap == null or prep_failed:
 		return
-	var path: String = await cap.snap(get_tree(), String(cur_preset))
+	capturing = true
+	view.position = Vector2.ZERO
+	var ctx := {"preset": String(cur_preset), "seed": battle.seed_value, "t": battle.t}
+	var path: String = await cap.snap(get_tree(), ctx)
+	capturing = false
 	print("capture: ", ProjectSettings.globalize_path(path))
 
 func _card_text(c: Dictionary) -> String:
@@ -360,18 +447,18 @@ func _on_offer_ready(cards: Array, rerolls_left: int, _source: StringName) -> vo
 		offer_buttons[i].visible = i < cards.size()
 	reroll_button.text = "리롤 (남은 %d)" % rerolls_left
 	reroll_button.disabled = rerolls_left <= 0
-	offer_box.visible = true
+	offer_box.visible = not offer_hidden
 	touch_idx = -1
 	offer_lock.arm()
 
 func _on_pick(i: int) -> void:
-	if offer_lock.is_locked():
+	if not OfferLock.accepts(offer_lock.is_locked(), offer_hidden):
 		return
 	if battle.pick(i):
 		offer_box.visible = battle.awaiting_pick
 
 func _on_reroll() -> void:
-	if offer_lock.is_locked():
+	if not OfferLock.accepts(offer_lock.is_locked(), offer_hidden):
 		return
 	battle.reroll()
 
@@ -387,11 +474,18 @@ func _on_run_ended(result: Dictionary) -> void:
 	if result_shown:
 		return
 	result_shown = true
-	last_points = RunState.meta.settle(result, bal)
-	RunState.save_meta()
+	var is_preset: bool = cur_preset != &"" or debug_granted   # 프리셋(캡처) 판은 세이브·기록을 바꾸지 않는다
+	if not is_preset:
+		last_points = RunState.meta.settle(result, bal)
+		RunState.save_meta()
+	else:
+		last_points = 0
 	var lines: PackedStringArray = []
 	lines.append("판 종료: %s" % ("클리어" if result["cleared"] else "쓰러짐 (%s)" % String(result["death_cause"])))
-	lines.append("각인 +%d (보유 %d)" % [last_points, RunState.meta.points])
+	if is_preset:
+		lines.append("부여됨: 기록 안 함" if debug_granted and cur_preset == &"" else "프리셋 판: 저장·기록 안 함")
+	else:
+		lines.append("각인 +%d (보유 %d)" % [last_points, RunState.meta.points])
 	for it in result["top_items"]:
 		lines.append("  %s  %d" % [it["key"], it["value"]])
 	result_label.text = "\n".join(lines)
@@ -399,6 +493,8 @@ func _on_run_ended(result: Dictionary) -> void:
 	result_box.visible = true
 	result_dim.visible = true
 	offer_box.visible = false
+	if is_preset:
+		return
 	# runs.jsonl 필드는 P3 §2.3 정본. 릴리스에서는 debug 값이 기본값(false/1.0)으로 고정된다.
 	var dbg: bool = OS.is_debug_build()
 	Log.run_record({"run_id": run_id_cur, "seed": int(result["seed"]), "class": String(result["class"]),
@@ -421,6 +517,8 @@ func _refresh_shop() -> void:
 		shop_buttons[i].disabled = owned or not RunState.meta.can_buy(nd["id"])
 
 func _on_buy(id: StringName) -> void:
+	if cur_preset != &"" or debug_granted:
+		return   # 프리셋·부여 판 결과 화면에서는 실제 메타를 바꾸는 구매를 막는다
 	if RunState.meta.buy(id):
 		RunState.save_meta()
 		result_label.text += "\n구매: %s" % String(id)

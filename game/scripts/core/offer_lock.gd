@@ -6,6 +6,10 @@ const LOCK_S: float = 0.5
 
 var left: float = 0.0
 
+## 카드·리롤 입력 허용 여부. 잠금 중이거나 박스가 숨겨진 상태(hide_offer 프리셋)면 무시한다.
+static func accepts(locked: bool, hidden: bool) -> bool:
+	return not locked and not hidden
+
 func arm() -> void:
 	left = LOCK_S
 

@@ -21,14 +21,14 @@ const PRESETS: Dictionary = {
 	# forward_steps 실측(시드 12345, 무적 on, 입력 없음, 단위 step): cover_01 화면 진입 t=48.81s ≈ 5858 step,
 	# hazard_01 진입 t=24.61s, choke_01 진입 t=72.84s ≈ 8741 step. 무적 off 는 t=23.0s 에 사망해 도달 전에 끝난다.
 	&"CAP-01": {"label": "엄폐 방어", "seed": 12345, "class_id": &"sword", "early_run": true,
-		"forward_steps": 5870, "god": true, "weapon": {}, "passives": {}, "pause_after": true,
+		"forward_steps": 5870, "god": true, "weapon": {}, "passives": {}, "pause_after": true, "hide_offer": true,
 		"note": "cover_01 화면 진입 시점(실측). 적 탄 부채가 엄폐물에 막히는지는 미확인 [추정]"},
 	&"CAP-02": {"label": "지형 3종", "seed": 12345, "class_id": &"sword", "early_run": true,
-		"forward_steps": 5870, "god": true, "weapon": {}, "passives": {}, "pause_after": true,
+		"forward_steps": 5870, "god": true, "weapon": {}, "passives": {}, "pause_after": true, "hide_offer": true,
 		"overrides": {"hazard_highlight": true},
 		"note": "hazard_01 과 cover_01 이 함께 보이는 시점(실측 t=48.81s). 벽 존재 확인 미완. 위험 바닥 강조는 렌더 오버라이드 미구현 [추정]"},
 	&"CAP-03": {"label": "병목 처치", "seed": 12345, "class_id": &"sword", "early_run": true,
-		"forward_steps": 8760, "god": true, "weapon": {}, "passives": {}, "pause_after": true,
+		"forward_steps": 8760, "god": true, "weapon": {}, "passives": {}, "pause_after": true, "hide_offer": true,
 		"overrides": {"spawn_count": 12},
 		"note": "choke_01 화면 진입 시점(실측 t=72.84s). 화면 내 12마리 이상(하한 보장)"},
 	&"CAP-04": {"label": "3택 직전", "seed": 12345, "class_id": &"sword", "early_run": true,
@@ -54,6 +54,19 @@ static func ids() -> Array[StringName]:
 	for k in keys:
 		out.append(StringName(k))
 	return out
+
+## hide_offer 프리셋은 3택 박스만 숨긴다. awaiting_pick 과 입력 잠금은 그대로 두고 자동으로 닫지 않는다(rng_offer 소비 금지).
+## 판 종료 시 메타 정산·세이브·runs.jsonl 기록을 건너뛸지 정한다 (프리셋 판 또는 디버그 부여 판).
+static func skips_record(preset: StringName, granted: bool) -> bool:
+	return preset != &"" or granted
+
+static func hides_offer(id: StringName) -> bool:
+	return PRESETS.has(id) and bool(PRESETS[id].get("hide_offer", false))
+
+## C-3: stop_on == "offer" 프리셋이 3택 도달 전에 끝났으면(사망 등) true. advance_chunk 가 true 를 돌려준 뒤에 부른다.
+## 호출부는 라벨 "도달 실패: 사망 t=…" 를 보이고 PNG 를 만들지 않으며 자동 재시도하지 않는다. god 는 건드리지 않는다.
+static func reach_failed(b: Battle, id: StringName) -> bool:
+	return PRESETS.has(id) and PRESETS[id].get("stop_on", "") == "offer" and b.ended and not b.awaiting_pick
 
 ## 프리셋으로 Battle 을 만든다. 무기·패시브 오버라이드를 적용한다(D1·D5).
 ## meta 는 프리셋 고정 값을 넣는다(D5). 저장 파일을 읽지 않는다.
