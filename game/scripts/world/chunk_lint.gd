@@ -5,12 +5,55 @@ class_name ChunkLint extends RefCounted
 
 const ALLOWED := ".#chSEGRDBP"
 const MIN_PASSAGE := 3
+const L4B_EXCEPT: Array[String] = ["plaza_01"]
 
 static func expected_height(role: ChunkDef.Role) -> int:
 	match role:
 		ChunkDef.Role.PLAZA: return 12
 		ChunkDef.Role.BOSS_ARENA: return 21
 	return 24
+
+const HEADER_KEYS := ["id", "role", "width", "height", "tags", "difficulty", "weight", "spawn_budget"]
+
+## L0 헤더 검사. 파서는 role 오타를 OPEN 으로 조용히 바꾸므로 원문 헤더를 직접 본다.
+## id = 파일명, role = ChunkDef.Role 이름, width = 12, 알 수 없는 키 금지.
+static func lint_header(file_base: String, text: String) -> Array[String]:
+	var errs: Array[String] = []
+	var seen_id := ""
+	var seen_role := false
+	var seen_width := false
+	for raw in text.split("\n"):
+		var line := raw.strip_edges()
+		if line == "---":
+			break
+		if line == "" or line.begins_with("#"):
+			continue
+		var idx := line.find(":")
+		if idx < 0:
+			continue
+		var k := line.substr(0, idx).strip_edges()
+		var v := line.substr(idx + 1).strip_edges()
+		if not HEADER_KEYS.has(k):
+			errs.append("%s L0 unknown key '%s'" % [file_base, k])
+			continue
+		match k:
+			"id":
+				seen_id = v
+			"role":
+				seen_role = true
+				if not ChunkDef.Role.keys().has(v):
+					errs.append("%s L0 bad role '%s'" % [file_base, v])
+			"width":
+				seen_width = true
+				if int(v) != 12:
+					errs.append("%s L0 width %s != 12" % [file_base, v])
+	if seen_id != file_base:
+		errs.append("%s L0 id '%s' != file name" % [file_base, seen_id])
+	if not seen_role:
+		errs.append("%s L0 role missing" % file_base)
+	if not seen_width:
+		errs.append("%s L0 width missing" % file_base)
+	return errs
 
 static func lint(c: ChunkDef) -> Array[String]:
 	var errs: Array[String] = []
@@ -55,6 +98,13 @@ static func lint(c: ChunkDef) -> Array[String]:
 					obst += 1
 		if obst > 18:
 			errs.append("%s L5 bottom obstacles %d > 18" % [id, obst])
+	# L4b 광장·아레나 이음매(위 2행·아래 2행)가 전부 '.' (24행 청크는 L4가 담당)
+	# plaza_01 은 모서리 ### 가 의도된 틀이라 예외. level-designer 확인 전까지 유지(미결: P2 §320)
+	if (c.role == ChunkDef.Role.PLAZA or c.role == ChunkDef.Role.BOSS_ARENA) and not L4B_EXCEPT.has(id):
+		var h := c.grid.size()
+		for r in [0, 1, h - 2, h - 1]:
+			if c.grid[r] != ".".repeat(c.width):
+				errs.append("%s L4b seam row %d not all floor" % [id, r])
 	if c.count_char("E") > 1:
 		errs.append("%s L5 more than one E" % id)
 	if c.count_char("G") > 0 and c.role != ChunkDef.Role.BOSS_ENTRY:

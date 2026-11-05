@@ -45,15 +45,17 @@ static func generate(state: OfferState, bias: Dictionary, rng: RandomNumberGener
 		var id := _pick(new_left, state, bias, rng)
 		picked.append(id)
 		out.append(_card(id, true, state))
-	# 3) 무작위 1 (합집합에서 중복 제외)
-	var rest: Array[StringName] = []
-	for id in up_pool:
-		if not picked.has(id):
-			rest.append(id)
-	for id in new_pool:
-		if not picked.has(id):
-			rest.append(id)
-	if rest.size() > 0:
+	# 3) 무작위 1 (합집합에서 중복 제외). 신규 후보가 없어 2번이 비면 남은 칸도 같은 풀에서 채운다.
+	while out.size() < 3:
+		var rest: Array[StringName] = []
+		for id in up_pool:
+			if not picked.has(id):
+				rest.append(id)
+		for id in new_pool:
+			if not picked.has(id):
+				rest.append(id)
+		if rest.is_empty():
+			break
 		var id := _pick(rest, state, bias, rng)
 		picked.append(id)
 		out.append(_card(id, not state.owns(id), state))
@@ -82,12 +84,12 @@ static func commit(state: OfferState, offer: Array[Dictionary]) -> void:
 	else:
 		state.since_material += 1
 
-## 무기 Lv5(미진화) 이고 그 진화 재료 패시브를 아직 안 가진 경우의 패시브
+## 무기 Lv(evolve_min_level) 이상(미진화) 이고 그 진화 재료 패시브를 아직 안 가진 경우의 패시브
 static func is_material(id: StringName, state: OfferState) -> bool:
 	if not Defs.is_passive(id) or state.passives.has(id):
 		return false
 	for wid in state.weapons.keys():
-		if state.evolved.has(wid) or int(state.weapons[wid]) < Defs.MAX_LEVEL:
+		if state.evolved.has(wid) or int(state.weapons[wid]) < state.evolve_min_level:
 			continue
 		if Defs.EVOLUTIONS.has(wid) and Defs.EVOLUTIONS[wid]["passive"] == id:
 			return true

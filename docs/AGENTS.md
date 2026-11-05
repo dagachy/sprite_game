@@ -36,6 +36,7 @@
 | `mobile-performance-engineer` | 프레임, GC, 발열, 빌드 크기, 프로파일링 진단 |
 | `store-compliance-specialist` | 스토어 심사 정책, 연령 등급, 개인정보·ATT·아동 규정 |
 | `spritefusion-expert` | Sprite Fusion 에디터, 내보내기, MCP 연동 |
+| `technical-director` | 아키텍처·계약·결정성·성능 예산 검토, 구현 작업 분배 |
 
 ## 하네스 메타 (감사·실행)
 

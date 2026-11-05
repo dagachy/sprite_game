@@ -44,7 +44,7 @@ class_name Balance extends Resource
 @export var elite_ratio: float = 0.6
 @export var ratio_lerp_time: float = 0.5
 @export var plaza_decel_time: float = 6.0
-@export var plaza_hold_time: float = 40.0
+@export var plaza_hold_time: float = 20.0   # p4 결정 4: 40s -> 20s
 @export var plaza_accel_time: float = 1.0
 @export var plaza_decel_top_y: float = 96.0
 @export var entry_speed_mult: float = 3.0
@@ -63,7 +63,7 @@ class_name Balance extends Resource
 @export var max_alive: int = 36
 @export var defer_alive: int = 32
 @export var spawn_grace_zone: float = 2.0
-@export var spawn_grace_start: float = 5.0
+@export var spawn_grace_start: float = 3.0   # p4 결정 1: 5s -> 3s
 @export var pressure_early: float = 2.0
 @export var pressure_late: float = 3.0
 @export var pressure_split_t: float = 75.0
@@ -130,12 +130,16 @@ class_name Balance extends Resource
 @export var xp_b: float = 5.0
 @export var xp_c: float = 0.4
 @export var xp_first_mult: float = 1.0
+@export var xp_first_need_early: int = 8     # p4 결정 2: 판 1~3 xp_need(1)=8
+@export var early_run_count: int = 3
 
 @export_group("Offer (mechanics §6.1)")
 @export var offer_base_weight: float = 100.0
 @export var material_boost: float = 3.0
 @export var material_pity: int = 3
 @export var free_rerolls: int = 2
+@export var evolve_min_level: int = 4      # p4 결정 3: 단축판은 Lv4 + 짝 패시브
+@export var evolve_delay: float = 1.5
 
 @export_group("Imprint (economy §4.1)")
 @export var imprint_participation: int = 3
