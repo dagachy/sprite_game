@@ -33,6 +33,9 @@ var god: bool = false
 var touch_idx: int = -1
 var touch_start: Vector2 = Vector2.ZERO
 var banner_t: float = 0.0
+const BOSS_BLACKOUT: float = 0.5
+var boss_intro_t: float = 0.0
+var boss_dim: ColorRect
 var hint_t: float = 0.0
 var result_shown: bool = false
 var cap: RefCounted = null   # 디버그 캡처 도구 (디버그 빌드에서만 생성, C1·C2·C5)
@@ -71,7 +74,25 @@ func _ready() -> void:
 	_build_ui()
 	if OS.is_debug_build():
 		cap = load("res://scripts/debug/capture_rig.gd").new()
-	start_run()
+	_boot_flow()
+
+## 부팅 경로(decision5 D6). 디버그 빌드/프리셋 인자는 TITLE 생략하고 즉시 start_run.
+## FlowUI 가 run_ended 연결과 flow.run_ended() 호출을 맡는다(main 핸들러 뒤에 연결, 임시 결과 UI 숨김).
+var flow: Flow = null
+var flow_ui_ready: bool = true   # FlowUI 연결됨. false 로 두면 릴리스도 직접 경로
+
+func _boot_flow() -> void:
+	flow = Flow.new()
+	flow.run_requested.connect(func() -> void: start_run())
+	flow.abandoned.connect(_on_abandoned)
+	var fui := FlowUI.new()
+	add_child(fui)
+	fui.attach(self, flow)   # boot 전에 붙여야 TITLE 전환을 놓치지 않는다
+	var has_preset: bool = false
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--preset"):
+			has_preset = true
+	flow.boot(Flow.should_skip_title(OS.is_debug_build(), has_preset, false) or not flow_ui_ready)
 
 func _build_ui() -> void:
 	ui = CanvasLayer.new()
@@ -86,6 +107,9 @@ func _build_ui() -> void:
 	if OS.is_debug_build():
 		debug_label = _label(Vector2(6, 20), 8)
 		_build_preset_panel()
+	boss_dim = ColorRect.new(); boss_dim.color = Color(0, 0, 0, 0.85); boss_dim.size = Vector2(216, 384)
+	boss_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE; boss_dim.visible = false
+	ui.add_child(boss_dim)
 	banner_label = _label(Vector2(0, 96), 14)
 	banner_label.size = Vector2(216, 24)
 	banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -224,6 +248,9 @@ func _label(pos: Vector2, size_px: int) -> Label:
 
 ## preset 이 비어 있지 않으면 C3 시드 프리셋으로 시작한다(디버그 전용). 비어 있으면 일반 판.
 func start_run(preset: StringName = &"") -> void:
+	boss_intro_t = 0.0
+	boss_dim.visible = false
+	quitting_midrun = false
 	run_seq += 1
 	cur_preset = preset
 	debug_granted = false
@@ -358,6 +385,12 @@ func _update_hud(delta: float) -> void:
 	if debug_label != null:
 		debug_label.text = "x%.0f 시드 %d%s%s 적 %d %d fps" % [speed_mult, b.seed_value, " [고정]" if fixed_seed else "",
 				" [무적]" if b.god_mode else "", b.enemies.n, Engine.get_frames_per_second()]
+	if boss_intro_t > 0.0:
+		boss_intro_t -= delta
+		if boss_intro_t <= 0.0:
+			boss_dim.visible = false
+			banner_label.text = GameStrings.get_text(&"boss.intro")
+			banner_t = 1.5
 	if banner_t > 0.0:
 		banner_t -= delta
 		if banner_t <= 0.0:
@@ -463,6 +496,12 @@ func _on_reroll() -> void:
 	battle.reroll()
 
 func _on_banner(key: String) -> void:
+	if key == "ui.zone.boss":
+		# E2: 0.5초 암전과 실루엣 뒤 boss.intro 자막 (battle.gd 의 기존 banner 시그널 재사용)
+		boss_intro_t = BOSS_BLACKOUT
+		boss_dim.visible = true
+		banner_label.text = ""
+		return
 	banner_label.text = key
 	banner_t = 1.5
 
@@ -470,16 +509,20 @@ func _on_hint(key: String) -> void:
 	hint_label.text = key
 	hint_t = 3.0
 
+var quitting_midrun: bool = false   # 포기 확정으로 판을 끝내는 중. 로그의 quit_midrun 로 기록된다
+
 func _on_run_ended(result: Dictionary) -> void:
 	if result_shown:
 		return
 	result_shown = true
 	var is_preset: bool = cur_preset != &"" or debug_granted   # 프리셋(캡처) 판은 세이브·기록을 바꾸지 않는다
+	# runs.jsonl 필드는 P3 §2.3 정본. 릴리스에서는 debug 값이 기본값(false/1.0)으로 고정된다.
+	var dbg: bool = OS.is_debug_build()
+	last_points = RunSettle.finish(result, quitting_midrun, is_preset, RunState.meta, bal, Log, run_id_cur,
+			{"god": dbg and god, "time_scale": speed_mult if dbg else 1.0,
+			"terrain_off": false, "seed_fixed": dbg and fixed_seed})
 	if not is_preset:
-		last_points = RunState.meta.settle(result, bal)
 		RunState.save_meta()
-	else:
-		last_points = 0
 	var lines: PackedStringArray = []
 	lines.append("판 종료: %s" % ("클리어" if result["cleared"] else "쓰러짐 (%s)" % String(result["death_cause"])))
 	if is_preset:
@@ -493,21 +536,21 @@ func _on_run_ended(result: Dictionary) -> void:
 	result_box.visible = true
 	result_dim.visible = true
 	offer_box.visible = false
-	if is_preset:
+	# FlowUI 가 없거나 PAUSE 에서 끝난 경우에도 흐름을 RESULT 로 보낸다(RUN/PAUSE 에서만 동작, 중복 무해)
+	if flow != null:
+		flow.run_ended()
+
+## 포기 확정(E6). 일반 판: 실패 정산(60%) + runs 1줄 후 RESULT. 프리셋·부여 판은 flow 가 TITLE 로 보내며 여기 오지 않는다.
+func _on_abandoned() -> void:
+	quit_run()
+
+## battle._end_run 호출은 이 래퍼 한 곳뿐이다(E7). 공개 Battle.abandon()/run_quit 이벤트는 P1(battle.gd 승인 대기).
+func quit_run() -> void:
+	if battle == null or battle.ended:
 		return
-	# runs.jsonl 필드는 P3 §2.3 정본. 릴리스에서는 debug 값이 기본값(false/1.0)으로 고정된다.
-	var dbg: bool = OS.is_debug_build()
-	Log.run_record({"run_id": run_id_cur, "seed": int(result["seed"]), "class": String(result["class"]),
-		"result": "cleared" if result["cleared"] else "died",
-		"death_cause": String(result["death_cause"]), "death_zone": String(result["death_zone"]),
-		"killer_kind": String(result["killer_kind"]),
-		"duration_s": snappedf(float(result["duration"]), 0.01),
-		"points": last_points, "levelups": int(result["levelups"]), "kills": int(result["kills"]),
-		"boss_reached": bool(result["boss_reached"]), "quit_midrun": false,
-		"retry_taps": null, "restart_latency_s": null,
-		"pick_log": result["pick_log"].map(func(x: StringName) -> String: return String(x)),
-		"debug": {"god": dbg and god, "time_scale": speed_mult if dbg else 1.0,
-			"terrain_off": false, "seed_fixed": dbg and fixed_seed}})
+	quitting_midrun = true
+	battle._end_run(false)   # run_ended -> _on_run_ended -> (FlowUI) flow.run_ended()
+	quitting_midrun = false
 
 func _refresh_shop() -> void:
 	for i in MetaState.NODES.size():
