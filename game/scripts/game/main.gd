@@ -85,6 +85,7 @@ func _boot_flow() -> void:
 	flow = Flow.new()
 	flow.run_requested.connect(func() -> void: start_run())
 	flow.abandoned.connect(_on_abandoned)
+	flow.state_changed.connect(_on_flow_state_changed)
 	var fui := FlowUI.new()
 	fui.attach(self, flow)   # boot 전에 붙여야 TITLE 전환을 놓치지 않는다. UI 구축은 add_child(_ready) 전에 끝낸다
 	add_child(fui)
@@ -93,6 +94,16 @@ func _boot_flow() -> void:
 		if a.begins_with("--preset"):
 			has_preset = true
 	flow.boot(Flow.should_skip_title(OS.is_debug_build(), has_preset, false) or not flow_ui_ready)
+
+## PAUSE 진입 시 터치 추적을 버린다. 정지 중 해제 이벤트가 유실돼도 touch_idx 가 남지 않게 한다.
+func _on_flow_state_changed(_old: Flow.State, new: Flow.State) -> void:
+	if new == Flow.State.PAUSE:
+		_reset_touch()
+
+func _reset_touch() -> void:
+	touch_idx = -1
+	if battle != null:
+		battle.set_input(false, Vector2.ZERO)
 
 func _build_ui() -> void:
 	ui = CanvasLayer.new()
@@ -294,7 +305,7 @@ func start_run(preset: StringName = &"") -> void:
 	result_box.visible = false
 	result_dim.visible = false
 	result_shown = false
-	touch_idx = -1
+	_reset_touch()
 	accum = 0.0
 	if preset != &"" and OS.is_debug_build():
 		# CAP-02: hazard_highlight 프리셋만 오버레이를 붙인다 (디버그 빌드 전용)
@@ -325,6 +336,20 @@ func _on_preset_go() -> void:
 		return
 	start_run(preset_pick.get_item_metadata(idx))
 
+## 터치 추적이 없을 때만 키보드(WASD·방향키)로 이동 입력을 만든다.
+func _poll_keyboard() -> void:
+	if touch_idx >= 0:
+		return
+	var d := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_up", "ui_down"))
+	if Input.is_physical_key_pressed(KEY_A): d.x -= 1.0
+	if Input.is_physical_key_pressed(KEY_D): d.x += 1.0
+	if Input.is_physical_key_pressed(KEY_W): d.y -= 1.0
+	if Input.is_physical_key_pressed(KEY_S): d.y += 1.0
+	if d != Vector2.ZERO:
+		battle.set_input(true, d.limit_length(1.0) * 30.0)
+	else:
+		battle.set_input(false, Vector2.ZERO)
+
 func _process(delta: float) -> void:
 	if battle == null:
 		return
@@ -347,16 +372,7 @@ func _process(delta: float) -> void:
 				_on_offer_ready(battle.current_offer, battle.rerolls_left, battle.offer_source)
 		view.queue_redraw()
 		return
-	if touch_idx < 0:
-		var d := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_up", "ui_down"))
-		if Input.is_physical_key_pressed(KEY_A): d.x -= 1.0
-		if Input.is_physical_key_pressed(KEY_D): d.x += 1.0
-		if Input.is_physical_key_pressed(KEY_W): d.y -= 1.0
-		if Input.is_physical_key_pressed(KEY_S): d.y += 1.0
-		if d != Vector2.ZERO:
-			battle.set_input(true, d.limit_length(1.0) * 30.0)
-		else:
-			battle.set_input(false, Vector2.ZERO)
+	_poll_keyboard()
 	offer_lock.tick(delta)
 	if world_paused:
 		# C2: 월드 정지. 누적 시간을 버리고, 요청된 한 프레임만 진행한다
@@ -481,7 +497,7 @@ func _on_offer_ready(cards: Array, rerolls_left: int, _source: StringName) -> vo
 	reroll_button.text = "리롤 (남은 %d)" % rerolls_left
 	reroll_button.disabled = rerolls_left <= 0
 	offer_box.visible = not offer_hidden
-	touch_idx = -1
+	_reset_touch()
 	offer_lock.arm()
 
 func _on_pick(i: int) -> void:
