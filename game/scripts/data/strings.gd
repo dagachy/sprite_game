@@ -37,6 +37,24 @@ const TABLE: Dictionary = {
 	&"ui.settings.on": "켜짐",
 	&"ui.settings.off": "꺼짐",
 	&"ui.settings.back": "뒤로",
+	# 최고 항목 표시명 (R2, battle.gd SRC_NAMES 8개와 1:1, 가정 문구)
+	&"item.w.w01": "초승달 베기",
+	&"item.w.w02": "관통 화살",
+	&"item.w.w03": "맴도는 불씨",
+	&"item.w.w04": "매복 불꽃",
+	&"item.e.w01": "보름달 베기",
+	&"item.e.w02": "꿰뚫는 별빛",
+	&"item.src.hazard": "길목의 함정",
+	&"item.src.other": "그 밖의 힘",
+	# 사유 줄 (TD 결정 4, defs.gd ENEMIES "death" 필드와 1:1, 가정 문구)
+	&"death.a1": "그늘 무리에 둘러싸여 쓰러졌다.",
+	# 현재 미사용(비활성): 투사체·폭발 사망 경로에서 killer_kind가 적 ID가 아니라 나오지 않음. battle.gd 변경 승인 후 재결정.
+	&"death.a2": "터지는 그늘에 휩쓸려 쓰러졌다.",
+	# 현재 미사용(비활성): 투사체·폭발 사망 경로에서 killer_kind가 적 ID가 아니라 나오지 않음. battle.gd 변경 승인 후 재결정.
+	&"death.b1": "먼 곳의 그늘빛에 맞아 쓰러졌다.",
+	&"death.b2": "두터운 그늘 무리에 밀려 쓰러졌다.",
+	&"death.elite": "묵직한 그늘에 짓눌려 쓰러졌다.",
+	&"death.boss_b1": "거대 그늘 앞에서 쓰러졌다.",
 	&"boss.intro": "거대 그늘이 길을 막는다",
 }
 
@@ -52,7 +70,7 @@ static func has_keys(keys: Array[StringName]) -> bool:
 
 ## 금지어(storyteller 톤 규칙). 단위 테스트가 TABLE 전체를 검사한다.
 ## 키 접두사별 스캔 대상. cut.clear* 는 storyteller 문구가 들어오면 TABLE 에만 추가하면 같은 스캔을 탄다.
-const SCAN_PREFIXES: Array[String] = ["cut.", "boss.", "res.", "ui."]
+const SCAN_PREFIXES: Array[String] = ["cut.", "boss.", "res.", "ui.", "item.", "death."]
 ## 판 시작 전 대기 상한(초). 타이틀 1탭 + 컷 3장 최소 + 로딩 (ux-onboarding §2~4, D4)
 const TITLE_TAP_SECONDS: float = 3.0
 const LOAD_SECONDS_MAX: float = 1.5

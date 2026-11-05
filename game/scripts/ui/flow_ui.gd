@@ -74,7 +74,10 @@ func _ready() -> void:
 	get_tree().quit_on_go_back = false   # SceneTree 속성. 뒤로 가기가 곧바로 앱 종료로 이어지지 않게 한다
 	get_viewport().size_changed.connect(update_safe_area)
 	update_safe_area()
-	_apply_state(flow.state if flow != null else Flow.State.TITLE)
+	if flow == null or pause_confirm_box == null:
+		push_warning("FlowUI._ready: setup/attach 전에 트리에 들어왔다. 상태 적용을 건너뛴다.")
+		return
+	_apply_state(flow.state)
 
 ## 세이프 영역(px) -> 논리 여백. 기기 값이 최소보다 크면 기기 값을 쓴다. 안전 영역을 못 얻으면 최소값.
 static func compute_safe_margins(win: Vector2, safe: Rect2i, logical: Vector2) -> Dictionary:
@@ -305,15 +308,11 @@ func _build_pause() -> void:
 	_centered(panel, a[1])
 	panel.custom_minimum_size.x = 160
 
-## 포기 확인. Flow 에 forfeit() 이 생기면 그것을 부르고(gameplay-programmer, E6), 없으면 신호만 낸다.
-## quit_to_title 로 직행하지 않는다.
-signal forfeit_requested()
-
+## 포기 확인. 일반 판은 abandoned -> main 정산 -> RESULT, 프리셋·부여 판은 기록 없이 TITLE (Flow.abandon).
 func _do_forfeit() -> void:
 	_set_confirm(false)
-	forfeit_requested.emit()
-	if flow.has_method("forfeit"):
-		flow.call("forfeit")
+	var no_record: bool = (_hv("cur_preset", &"") != &"") or bool(_hv("debug_granted", false))
+	flow.abandon(no_record)
 
 func _set_confirm(on: bool) -> void:
 	pause_confirm_box.visible = on
@@ -411,6 +410,8 @@ func _on_cut_finished(_skipped: bool) -> void:
 		_show_result_screen()
 
 func _process(delta: float) -> void:
+	if hud_layer == null or flow == null:   # setup 전(안전망 경로)에는 갱신하지 않는다
+		return
 	if cut != null:
 		cut.update(delta)
 	if hud_layer.visible:
@@ -463,15 +464,28 @@ func result_summary_text() -> String:
 	else:
 		lines.append(GameStrings.get_text(&"res.fell"))   # 임시 키 defeat_placeholder 는 확정 문구로 대체됨
 		lines.append(GameStrings.get_text(&"ui.result.fell_note"))
+		var dl: String = death_line_text()
+		if dl != "":
+			lines.append(dl)
 	if is_record_off():
 		lines.append(GameStrings.get_text(&"ui.result.no_record"))
 	elif not result.is_empty() and _run_state() != null:
 		lines.append("%s +%d (%d)" % [cur, int(_hv("last_points", 0)), int(_run_state().meta.points)])
 	for it in result.get("top_items", []):
 		var nm: String = GameStrings.get_text(StringName("item." + String(it["key"])))
-		if nm != "":   # 표시 이름이 없으면 내부 키를 노출하지 않고 숨긴다
+		if nm != "":   # R2: item.* 문구 등록됨. 표시 이름이 없으면 내부 키를 노출하지 않고 숨긴다
 			lines.append("%s  %d" % [nm, it["value"]])
 	return "\n".join(lines)
+
+## 사유 줄. killer_kind(A1, boss 등)를 Defs.ENEMIES 의 "death" 키로 찾는다. 문구가 없으면 "" (줄 숨김).
+func death_line_text() -> String:
+	if bool(result.get("cleared", false)):
+		return ""
+	var kk: String = String(result.get("killer_kind", ""))
+	var id: StringName = StringName(kk.to_upper())
+	if not Defs.ENEMIES.has(id):
+		return ""
+	return GameStrings.get_text(StringName(String(Defs.ENEMIES[id].get("death", ""))))
 
 func _show_result_screen() -> void:
 	result_summary.text = result_summary_text()

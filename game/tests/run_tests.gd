@@ -6,6 +6,11 @@ extends SceneTree
 const DIRS: Array[String] = ["res://tests/unit", "res://tests/sim"]
 
 func _init() -> void:
+	# _init 중에는 root 가 아직 트리 밖이라 add_child 가 _ready 를 부르지 않는다. 첫 프레임에 실행한다.
+	Engine.set_meta(&"test_tree", self)
+	process_frame.connect(_run, CONNECT_ONE_SHOT)
+
+func _run() -> void:
 	var suite_filter: String = ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--suite="):

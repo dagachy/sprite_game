@@ -1,57 +1,53 @@
-# HANDOFF (2026-11-05, 6)
+# HANDOFF (2026-11-05, 8)
 
 ## Goal
-Godot 4 모바일 2D 로그라이트 프로토타입(P0)을 출시 검증 가능하게 만든다. 이번 단위는 인트로·도입 컷·판 밖 흐름(타이틀, 설정, 일시정지, 결과, 포기)을 구현하는 것이었다. 구현과 헤드리스 검증은 끝났고, 실기기 확인과 밸런스 판정이 남았다.
+Godot 4 모바일 2D 로그라이트 프로토타입을 출시 검증 가능하게 만든다. 이번 단위는 실행 오류 수정과 실제 플레이 테스트였다. 실기기 확인과 밸런스 판정이 남았다.
 
 ## Decisions (재논의 금지)
 - 엔진 Godot 4.7.2 GDScript, 2D 전용. 루트 `game/`. 논리 해상도 216x384.
-- 결정 규칙: 사용자에게 물을 결정은 TD(technical-director)가 정하고, 실행은 전문가 팀이 한다. 메인은 구현 파일을 직접 고치지 않는다.
+- 결정은 TD가 하고, 실행은 전문가 팀이 한다. 사용자에게 묻는 것은 승인 대기 항목뿐이다.
 - 커밋·푸시는 사용자가 요청할 때만, main에 직접.
-- 밸런스 값 변경은 사람 플레이 기록 후에만. 봇 결과는 판정 근거로 쓰지 않는다.
+- 밸런스 값 변경과 판정은 사람 플레이 기록 후에만. 봇 결과는 근거로 쓰지 않는다.
+- battle.gd, balance.gd는 무변경. 공개 `abandon()`, `run_quit`, killer 적 ID 필드는 R9 승인 요청 때 한 건으로 묶는다.
+- 포기 확정은 `FlowUI._do_forfeit`이 `flow.abandon(no_record)`를 직접 호출한다. no_record는 프리셋 판 또는 부여 판이면 참. Flow에 forfeit() 래퍼는 두지 않는다 (`_workspace/p_playtest/technical-director/decision_forfeit.md`).
+- 부팅 순서: `main.gd`에서 `fui.attach()`를 `add_child(fui)` 앞에 둔다 (`_workspace/p_playtest/technical-director/decision.md`).
 - 디버그 코드는 `scripts/debug/`, 릴리스에서는 `OS.is_debug_build()` 가드 안 `load()`로만 참조 (AC-43).
 - 새 `class_name` 추가 시 `godot --headless --path game --import` 먼저.
-- 디버그 부여 런과 프리셋 판은 세이브·메타·runs·events를 건드리지 않는다 (decision4).
-- 인트로·흐름 결정은 `_workspace/td_decision/decision5.md` (E1~E7). 주요 내용:
-  - 도입 컷 3장과 클리어 컷 2장은 `CutPlayer`로 재생, 1탭 넘김·스킵, 컷당 최소 1.2초.
-  - 첫 실행 판별은 `user://settings.cfg`의 `first_run_done`. 메타 세이브 스키마는 건드리지 않음.
-  - UI는 코드로 빌드. 새 `.tscn` 없음.
-  - 포기는 확인 후 PAUSE→RESULT로 가서 60% 정산, runs.jsonl에 `result:"died"`, `quit_midrun:true`로 기록 (E6).
-  - 포기 로그는 집계에서 걸러낸다 (E7). `battle.gd`는 건드리지 않는다.
-  - `boss.intro`는 접근 구간 배너(`ui.zone.boss`)에 연결 유지 (E2).
+- 재화 표기는 "각인 +{n}". 존댓말은 UI 대화상자에만, 서사 컷은 존댓말 없음.
+- 문구의 단일 출처는 `game/scripts/data/strings.gd`.
 
 ## Done
-- 커밋 `cb7874c` (main, origin 동기화): CAP-01~06, 캡처 판정 결정 4, 디버그 부여 가드, AC-43 수정.
-- 미커밋 (main 위, 전부 작업 트리에 있음):
-  - 흐름: `game/scripts/game/flow.gd`(TITLE/INTRO/RUN/PAUSE/RESULT/SETTINGS), `settings_store.gd`, `cut_player.gd`, `run_settle.gd`(정산·runs 기록).
-  - UI: `game/scripts/ui/flow_ui.gd`(타이틀, 컷, 결과, 설정, 일시정지, 포기 확인, 뒤로 가기 차단, 백그라운드 자동 일시정지).
-  - 데이터: `game/scripts/data/strings.gd`(문구 테이블, 금지어 스캔).
-  - `game/scripts/game/main.gd`: `_boot_flow()`, `quit_run()` 래퍼, `boss.intro` 연결, `flow_ui_ready=true`.
-  - 테스트: `game/tests/unit/test_game_flow.gd`, `test_flow_ui.gd` (+uid).
-- 헤드리스: 88 tests, 2568 checks, 0 failures (재실행 확인). 부팅 에러 없음.
-- 문구: 클리어 컷(`cut.clear1~2`)과 표기 교체(쓰러졌다·각인)는 `_workspace/p_story/storyteller/lines.md`. game-reviewer 검토 전 가정 상태.
-- 보고서: `_workspace/p_impl_flow/gameplay-programmer/report*.md`, `_workspace/p_impl_ui/ui-implementer/report*.md`.
+- 부팅 SCRIPT ERROR(`FlowUI._set_confirm`) 수정. 원인은 `_ready`가 `setup()`보다 먼저 불린 것. 안전망 가드 추가 (`flow_ui.gd` `_ready`, `_process`).
+- 포기 확정 출시 차단 버그 수정. 기존에는 호출되지 않는 `forfeit()`을 불러 판이 안 끝났다. 죽은 경로(`forfeit_requested`, `has_method` 분기) 삭제.
+- 재검증 완료(실행): 부팅 오류 0건, 일반 판 포기 → RESULT, 프리셋 판 포기 → TITLE, 취소 → PAUSE 유지, 레벨업, 사망 → RESULT, 다시 하기, 홈 → TITLE 모두 통과.
+- 헤드리스 테스트: `godot --headless --path game --script res://tests/run_tests.gd` → 100 tests, 2686 checks, 0 failures.
+- 이전 단위 작업(문구 item/death, 사유 줄, E7 집계 규칙, R3 릴리스 점검, R5 체크리스트, R8 설정 보고)은 이전 핸드오프와 동일하게 완료.
+- 커밋 `51be7e2` 이후 변경은 아래 "Next 1"의 미커밋 상태다.
 
 ## Next
-1. 릴리스 export로 실기기 확인. 에디터와 디버그 빌드는 타이틀·인트로를 건너뛰므로 새 화면이 보이지 않는다. 체크 항목: 90초 실측, 로딩 1.5초, 컷 1.2초 전 탭 무시, 뒤로 가기(판 중 앱 종료 안 되는지), 전화·홈 이동 후 자동 일시정지, 노치 레이아웃, 한글 글리프, 3택·리롤 버튼(44px 미달, 기존 화면), 포기 정산과 재실행 후 유지, 컷 도중 강제 종료 후 재실행.
-2. 최고 항목 표시 문구를 storyteller에게 받아 `strings.gd` TABLE과 `SCAN_PREFIXES`("item.")에 추가. 지금은 결과 화면에서 전부 숨김.
-3. 클리어 컷·표기 문구 game-reviewer 검토 후 확정.
-4. 포기 집계 규칙(E7)을 AC-20·23·25 문서에 반영 (편집 담당 지정 필요).
-5. 밸런스 판정 (AC-20, 23, 25): 사람 플레이 기록 필요.
-6. 공개 `Battle.abandon()`과 `run_quit` 이벤트: `battle.gd` 변경이라 승인 후, 밸런스 판정 뒤에.
-7. 커밋·푸시: 사용자 요청 대기.
-8. 스토어 제출 전: `com.example` 패키지명, `use_gradle_build=false`(AAB 불가), 서명 설정.
+1. 커밋 여부 결정 (사용자 요청 대기). 미커밋 대상: `game/scripts/game/main.gd`, `game/scripts/ui/flow_ui.gd`, `game/tests/unit/test_flow_ui.gd`, `game/tests/run_tests.gd`, `game/scripts/data/strings.gd`, `game/project.godot`(이 단위와 무관한 변경일 수 있어 확인 필요), `HANDOFF.md`.
+2. 설계 확인: 타이틀의 디버그 패널 "프리셋 시작"이 판을 뒤에서 돌리고 타이틀이 가린다. 디버그 전용이면 그대로 두고, 아니면 TD 판단.
+3. 미확인 범위 QA: 실제 터치 입력(현재는 버튼 pressed 신호 직접 발화), 릴리스 빌드, 세이브·기록 파일 내용, 실기기 항목(노치, 인터럽트, 발열). 체크리스트는 `_workspace/p_remain_a/mobile-qa-lead/device_checklist.md`.
+4. R6 실기기 확인: 서명된 릴리스 Android 빌드 필요. 승인 대기 1·2 선행.
+5. R7 밸런스 판정 (economy-balance-analyst): 사람 플레이 기록(양식 B) 도착 후 E7 재집계. 최소 표본 일반 판 10판 이상, 플레이어 3명 이상(제안).
+6. R9 `Battle.abandon()`, `run_quit`, killer 적 ID: 승인 요청 한 건으로 묶는다.
+7. 스토어 제출 전: 패키지명 교체, use_gradle_build=false(AAB 불가) 재검토, 서명 설정, 버전 자동 증가 설계안.
 
 ## Key files
-- `game/scripts/game/flow.gd`: 상태 전이와 진입 메서드. 흐름의 기준.
-- `game/scripts/game/main.gd`: `_boot_flow`, `quit_run`, `boss.intro`. 디버그 패널과 AC-43 경로가 얽혀 있음.
-- `game/scripts/ui/flow_ui.gd`: 화면 5종과 포기 확인. 뒤로 가기 설정은 `_ready`.
-- `game/scripts/game/run_settle.gd`: 정산과 runs.jsonl 기록, 집계 규칙 주석.
-- `game/scripts/data/strings.gd`: 문구 테이블. 새 문구는 여기에만.
-- `_workspace/td_decision/decision5.md`: 이번 단위 결정 전체.
-- `game/scripts/core/battle.gd`: 무변경 원칙. `_end_run`은 private.
+- `game/scripts/ui/flow_ui.gd`: 포기·부팅 안전망, 결과 화면, 사유 줄.
+- `game/scripts/game/main.gd`: `_boot_flow`(부팅 순서), `_on_abandoned` → `quit_run`(정산).
+- `game/scripts/game/flow.gd`: 상태 전이. `abandon(no_record)`는 77행 부근.
+- `game/tests/unit/test_flow_ui.gd`: 포기 A~D 케이스와 부팅 회귀 테스트.
+- `game/tests/run_tests.gd`: 러너가 첫 프레임에 실행하도록 변경됨(`_run`, test_tree meta).
+- `game/scripts/core/battle.gd`: 무변경 원칙. R9 대기.
+- `_workspace/p_playtest/technical-director/`: decision.md(부팅), decision_forfeit.md(포기).
+- `_workspace/p_playtest/mobile-qa-lead/`: 실패 보고서 파일이 없음. 결과는 이 핸드오프 Done 항목 참조.
 
-## Open questions (사용자 확인이 남는 것만)
-- 커밋·푸시를 지금 할지.
-- 실기기 확인을 누가, 언제 할지 (릴리스 export 필요).
-- `battle.gd` 공개 포기 API 추가 승인 여부 (밸런스 판정 뒤로 미룸).
+## Open questions (사용자 확인 필요)
+- 커밋·푸시를 지금 할지, 대상 파일은 위 Next 1 목록 중 무엇인지.
+- 타이틀 디버그 "프리셋 시작" 동작을 그대로 둘지.
+- 실기기 확인 기기 모델과 OS 목록, 가로 모드 지원 여부.
+- 승인 대기 1: Android 서명 빌드와 키스토어(비밀 값).
+- 승인 대기 2: 패키지명 교체, use_gradle_build 전환, 서명 설정.
+- 승인 대기 3: battle.gd 공개 abandon()과 killer 필드(R9). 밸런스 판정 뒤.
 - 실결제 광고비 집행: 재판정 통과 후에도 결제 직전 확인 1회.

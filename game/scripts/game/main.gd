@@ -86,8 +86,8 @@ func _boot_flow() -> void:
 	flow.run_requested.connect(func() -> void: start_run())
 	flow.abandoned.connect(_on_abandoned)
 	var fui := FlowUI.new()
+	fui.attach(self, flow)   # boot 전에 붙여야 TITLE 전환을 놓치지 않는다. UI 구축은 add_child(_ready) 전에 끝낸다
 	add_child(fui)
-	fui.attach(self, flow)   # boot 전에 붙여야 TITLE 전환을 놓치지 않는다
 	var has_preset: bool = false
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--preset"):
